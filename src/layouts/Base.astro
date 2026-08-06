@@ -1,0 +1,119 @@
+---
+import '../styles/global.css';
+import displayFontUrl from '@fontsource-variable/unbounded/files/unbounded-latin-wght-normal.woff2?url';
+
+const {
+  title = 'FI99 — We create things.',
+  description = 'FI99 is an experimental studio. Websites, apps, software.',
+} = Astro.props;
+
+const canonical = new URL(Astro.url.pathname, Astro.site);
+const ogImage = new URL('/og.png', Astro.site);
+
+const nav = [
+  { href: '/work', label: 'WORK' },
+  { href: '/about', label: 'ABOUT' },
+  { href: '/notes', label: 'NOTES' },
+];
+
+const year = new Date().getFullYear();
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+    <link
+      rel="preload"
+      href={displayFontUrl}
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="FI99" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <script is:inline>
+      if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        document.documentElement.classList.add('motion');
+      }
+    </script>
+    <slot name="head" />
+  </head>
+  <body class="bg-void font-sans text-bone">
+    <a
+      href="#main"
+      class="absolute left-4 top-4 z-50 -translate-y-24 bg-magenta px-4 py-2 font-mono text-xs uppercase tracking-widest text-void transition-transform focus:translate-y-0"
+    >
+      Skip to content
+    </a>
+
+    <header class="border-b border-bone/20">
+      <div class="flex items-stretch justify-between">
+        <a
+          href="/"
+          class="flex items-center border-r border-bone/20 px-4 py-3 font-display text-lg font-black tracking-tight sm:px-6"
+          aria-label="FI99 home"
+        >
+          <span class="grad-text">FI99</span>
+        </a>
+        <nav aria-label="Main">
+          <ul class="flex h-full items-stretch">
+            {
+              nav.map((item) => (
+                <li class="flex border-l border-bone/20">
+                  <a
+                    href={item.href}
+                    data-scramble
+                    class="flex items-center px-4 py-3 font-mono text-xs tracking-[0.2em] hover:bg-bone hover:text-void sm:px-6"
+                  >
+                    {item.label}
+                  </a>
+                </li>
+              ))
+            }
+          </ul>
+        </nav>
+      </div>
+    </header>
+
+    <main id="main">
+      <slot />
+    </main>
+
+    <footer class="border-t border-bone/20 font-mono text-xs">
+      <div class="grid grid-cols-1 sm:grid-cols-3">
+        <p class="border-b border-bone/20 px-4 py-4 tracking-widest text-bone/60 sm:border-b-0 sm:border-r sm:px-6">
+          © {year} FI99 — WE CREATE THINGS.
+        </p>
+        <!-- TODO(fi99): [SOCIALS] — replace these placeholder links, or delete this list entirely -->
+        <ul class="flex items-center gap-6 border-b border-bone/20 px-4 py-4 sm:justify-center sm:border-b-0 sm:border-r sm:px-6">
+          <li><a href="#" data-scramble class="tracking-widest hover:text-magenta">GITHUB</a></li>
+          <li><a href="#" data-scramble class="tracking-widest hover:text-magenta">INSTAGRAM</a></li>
+          <li><a href="#" data-scramble class="tracking-widest hover:text-magenta">X</a></li>
+        </ul>
+        <p class="flex items-center px-4 py-4 tracking-widest text-bone/60 sm:justify-end sm:px-6">
+          FI99.CA
+        </p>
+      </div>
+    </footer>
+
+    <div class="fi-cursor" aria-hidden="true"></div>
+
+    <script>
+      import '../scripts/motion.js';
+      import '../scripts/cursor.js';
+    </script>
+  </body>
+</html>

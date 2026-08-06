@@ -1,0 +1,55 @@
+---
+// The signature mark: the logo's "99" rebuilt as four concentric strokes
+// per digit — bowl (full circle) + tail (hard flat-cut vertical), stepped
+// through the brand colors from magenta out to volt in.
+const { class: className = '', draw = false } = Astro.props;
+
+const CX = 42;
+const CY = 42;
+const TAIL_Y = 138;
+const RADII = [40, 32, 24, 16];
+const COLORS = ['#ff1f8f', '#c525c7', '#8b2bff', '#4a25ff'];
+const DIGIT_DX = 96;
+
+const digit = RADII.map((r, i) => ({
+  color: COLORS[i],
+  d: `M ${CX + r} ${CY} A ${r} ${r} 0 1 1 ${CX - r} ${CY} A ${r} ${r} 0 1 1 ${
+    CX + r
+  } ${CY} L ${CX + r} ${TAIL_Y}`,
+}));
+---
+
+<svg
+  viewBox="0 0 180 140"
+  fill="none"
+  role="img"
+  aria-label="99"
+  class:list={['ml99', draw && 'ml99-draw', className]}
+>
+  <g>
+    {
+      digit.map((p) => (
+        <path
+          class="ml99-path"
+          d={p.d}
+          stroke={p.color}
+          stroke-width="3.5"
+          stroke-linecap="butt"
+        />
+      ))
+    }
+  </g>
+  <g transform={`translate(${DIGIT_DX} 0)`}>
+    {
+      digit.map((p) => (
+        <path
+          class="ml99-path"
+          d={p.d}
+          stroke={p.color}
+          stroke-width="3.5"
+          stroke-linecap="butt"
+        />
+      ))
+    }
+  </g>
+</svg>

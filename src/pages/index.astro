@@ -1,17 +1,92 @@
 ---
+import Base from '../layouts/Base.astro';
+import Multiline99 from '../components/Multiline99.astro';
+import SectionRule from '../components/SectionRule.astro';
+import Ticker from '../components/Ticker.astro';
+import ContactStrip from '../components/ContactStrip.astro';
+import ProjectRow from '../components/ProjectRow.astro';
+import { projects } from '../data/projects.js';
 
+const selected = projects.slice(0, 3);
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<Base
+  title="FI99 — We create things."
+  description="FI99 is an experimental studio. Websites, apps, software."
+>
+  <!-- Hero -->
+  <section class="hero flex min-h-[calc(100svh-3.1rem)] flex-col justify-between border-b border-bone/20 px-4 pb-6 pt-8 sm:px-6 sm:pt-12">
+    <h1 class="sr-only">FI99 — We create things.</h1>
+    <div class="hero-mark flex items-end justify-between" aria-hidden="true">
+      <span class="hero-fi hero-snap font-display font-black uppercase leading-none tracking-tight">
+        <span class="grad-text">FI</span>
+      </span>
+      <Multiline99 draw class="hero-99 crt-glow" />
+    </div>
+    <div class="mt-10 sm:mt-14">
+      <p class="hero-snap font-display text-[clamp(1.375rem,3.5vw,3rem)] font-medium leading-tight">
+        We create things.
+      </p>
+      <!-- TODO(fi99): [SUBLINE] — confirm this line, add a location if we want one -->
+      <p class="hero-snap mt-4 font-mono text-xs tracking-[0.2em] text-bone/60 sm:text-sm">
+        AN EXPERIMENTAL STUDIO. WEBSITES, APPS, SOFTWARE.
+      </p>
+    </div>
+    <div class="hero-snap mt-10 flex items-center justify-between font-mono text-[11px] tracking-[0.25em] text-bone/50">
+      <span>[ FI99 — EXPERIMENTAL STUDIO ]</span>
+      <span aria-hidden="true">SCROLL ↓</span>
+    </div>
+  </section>
+
+  <!-- Selected work -->
+  <section class="px-0 py-16 sm:py-24" aria-labelledby="work-heading">
+    <div class="px-4 sm:px-6">
+      <SectionRule label="SELECTED WORK — 01/03" />
+      <h2
+        id="work-heading"
+        data-split
+        class="mt-6 font-display text-[clamp(2rem,6vw,5rem)] font-black uppercase leading-none tracking-tight"
+      >
+        Selected work
+      </h2>
+    </div>
+    <ul class="mt-10 list-none">
+      {selected.map((project, i) => <ProjectRow project={project} index={i} />)}
+    </ul>
+    <div class="border-t border-bone/20 px-4 py-6 sm:px-6">
+      <a
+        href="/work"
+        data-scramble
+        class="font-mono text-sm tracking-[0.2em] text-bone hover:text-magenta"
+      >
+        ALL WORK →
+      </a>
+    </div>
+  </section>
+
+  <!-- Manifesto excerpt -->
+  <section class="border-t border-bone/20 px-4 py-16 sm:px-6 sm:py-24" aria-labelledby="manifesto-heading">
+    <SectionRule label="MANIFESTO — EXCERPT" />
+    <h2 id="manifesto-heading" class="sr-only">Manifesto</h2>
+    <!-- TODO(fi99): placeholder manifesto — rewrite in our own voice before launch -->
+    <blockquote
+      data-reveal
+      class="mt-10 max-w-5xl text-[clamp(1.375rem,3.2vw,2.5rem)] font-medium leading-snug"
+    >
+      FI99 is three people who build software because the ideas would not leave
+      us alone. We have no category and we are not shopping for one.
+    </blockquote>
+    <a
+      href="/about"
+      data-scramble
+      data-reveal
+      class="mt-8 inline-block font-mono text-sm tracking-[0.2em] text-bone hover:text-magenta"
+    >
+      READ THE REST →
+    </a>
+  </section>
+
+  <Ticker />
+
+  <ContactStrip />
+</Base>

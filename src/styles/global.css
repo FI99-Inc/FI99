@@ -1,1 +1,340 @@
-@import "tailwindcss";
+@import '@fontsource-variable/unbounded';
+@import '@fontsource-variable/bricolage-grotesque';
+@import '@fontsource-variable/space-grotesk';
+@import '@fontsource-variable/jetbrains-mono';
+@import 'tailwindcss';
+
+@theme {
+  --color-void: #060606;
+  --color-bone: #f2efe9;
+  --color-magenta: #ff1f8f;
+  --color-violet: #8b2bff;
+  --color-volt: #4a25ff;
+
+  --font-display: 'Unbounded Variable', system-ui, sans-serif;
+  --font-sans: 'Space Grotesk Variable', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono Variable', ui-monospace, 'Cascadia Mono', monospace;
+}
+
+@layer base {
+  html {
+    background-color: var(--color-void);
+    color: var(--color-bone);
+    scroll-behavior: smooth;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+  }
+
+  body {
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    min-height: 100svh;
+  }
+
+  ::selection {
+    background-color: var(--color-magenta);
+    color: var(--color-void);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-magenta);
+    outline-offset: 2px;
+  }
+
+  /* Hard edges everywhere. No exceptions. */
+  * {
+    border-radius: 0 !important;
+  }
+}
+
+/* ---- Brand gradient: raw and hard, never blurred ---- */
+
+.grad-bg {
+  background-image: linear-gradient(
+    135deg,
+    var(--color-magenta),
+    var(--color-violet),
+    var(--color-volt)
+  );
+}
+
+.grad-text {
+  background-image: linear-gradient(
+    135deg,
+    var(--color-magenta),
+    var(--color-violet),
+    var(--color-volt)
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+.grad-rule {
+  height: 6px;
+  background-image: linear-gradient(
+    90deg,
+    var(--color-magenta),
+    var(--color-violet),
+    var(--color-volt)
+  );
+}
+
+/* ---- Y2K texture: applied sparingly on top of the brutalist base ---- */
+
+.scanlines {
+  position: relative;
+}
+
+.scanlines::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent 0px,
+    transparent 2px,
+    rgb(0 0 0 / 0.28) 2px,
+    rgb(0 0 0 / 0.28) 3px
+  );
+  z-index: 1;
+}
+
+.crt-glow {
+  filter: drop-shadow(0 0 6px rgb(255 31 143 / 0.55))
+    drop-shadow(0 0 22px rgb(139 43 255 / 0.35));
+}
+
+/* ---- Motion scaffolding ----
+   html.motion is set by an inline head script only when JS runs and the
+   user has not asked for reduced motion. Without it, everything is
+   visible and static. */
+
+html.motion [data-reveal] {
+  opacity: 0;
+  transform: translateY(28px);
+}
+
+html.motion .hero-snap {
+  opacity: 0;
+  transform: translateY(14px);
+}
+
+/* Hero 99 paths stay hidden until GSAP sets the dash draw state. */
+html.motion .ml99-draw .ml99-path {
+  opacity: 0;
+}
+
+/* ---- Hero wordmark sizing ----
+   One knob sizes the whole mark: --h is the 99 SVG's height. FI's
+   font-size is derived so its cap height visually matches the SVG. */
+
+.hero-mark {
+  --h: clamp(6.5rem, 28vw, 26rem);
+}
+
+.hero-fi {
+  font-size: calc(var(--h) * 1.32);
+  line-height: 0.76;
+}
+
+.hero-99 {
+  height: var(--h);
+  width: auto;
+}
+
+/* ---- Custom cursor (desktop, fine pointers, motion allowed) ---- */
+
+html.cursor-on,
+html.cursor-on a,
+html.cursor-on button,
+html.cursor-on [role='button'] {
+  cursor: none;
+}
+
+.fi-cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 28px;
+  height: 28px;
+  margin: -14px 0 0 -14px;
+  pointer-events: none;
+  z-index: 9999;
+  display: none;
+}
+
+html.cursor-on .fi-cursor {
+  display: block;
+}
+
+.fi-cursor::before,
+.fi-cursor::after {
+  content: '';
+  position: absolute;
+  background: var(--color-bone);
+  mix-blend-mode: difference;
+}
+
+.fi-cursor::before {
+  left: 50%;
+  top: 0;
+  width: 1.5px;
+  height: 100%;
+  transform: translateX(-50%);
+}
+
+.fi-cursor::after {
+  top: 50%;
+  left: 0;
+  height: 1.5px;
+  width: 100%;
+  transform: translateY(-50%);
+}
+
+.fi-cursor.is-active::before,
+.fi-cursor.is-active::after {
+  background: var(--color-magenta);
+}
+
+/* ---- 404 glitch ---- */
+
+.glitch {
+  position: relative;
+  display: inline-block;
+}
+
+.glitch::before,
+.glitch::after {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .glitch::before,
+  .glitch::after {
+    opacity: 0.85;
+  }
+
+  .glitch::before {
+    color: var(--color-magenta);
+    animation: glitch-a 2.4s steps(1) infinite;
+  }
+
+  .glitch::after {
+    color: var(--color-volt);
+    animation: glitch-b 2.4s steps(1) infinite;
+  }
+}
+
+@keyframes glitch-a {
+  0%, 86%, 100% { transform: none; clip-path: inset(0 0 100% 0); }
+  87% { transform: translate(-6px, 3px); clip-path: inset(12% 0 55% 0); }
+  90% { transform: translate(5px, -2px); clip-path: inset(60% 0 8% 0); }
+  93% { transform: translate(-3px, 1px); clip-path: inset(35% 0 40% 0); }
+  96% { transform: translate(4px, -4px); clip-path: inset(5% 0 78% 0); }
+}
+
+@keyframes glitch-b {
+  0%, 84%, 100% { transform: none; clip-path: inset(0 0 100% 0); }
+  85% { transform: translate(6px, -3px); clip-path: inset(48% 0 22% 0); }
+  89% { transform: translate(-5px, 2px); clip-path: inset(8% 0 70% 0); }
+  94% { transform: translate(3px, 3px); clip-path: inset(70% 0 4% 0); }
+  97% { transform: translate(-4px, -1px); clip-path: inset(25% 0 50% 0); }
+}
+
+/* ---- Notes prose (hand-rolled, no plugin) ---- */
+
+.note-prose {
+  font-size: 1.0625rem;
+  line-height: 1.75;
+}
+
+.note-prose > * + * {
+  margin-top: 1.25em;
+}
+
+.note-prose h2,
+.note-prose h3 {
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  margin-top: 2.25em;
+}
+
+.note-prose h2 {
+  font-size: 1.5rem;
+  border-bottom: 1px solid rgb(242 239 233 / 0.25);
+  padding-bottom: 0.5rem;
+}
+
+.note-prose h3 {
+  font-size: 1.125rem;
+}
+
+.note-prose a {
+  color: var(--color-magenta);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.note-prose a:hover {
+  background: var(--color-magenta);
+  color: var(--color-void);
+  text-decoration: none;
+}
+
+.note-prose ul,
+.note-prose ol {
+  padding-left: 1.5rem;
+}
+
+.note-prose ul {
+  list-style: square;
+}
+
+.note-prose ol {
+  list-style: decimal;
+}
+
+.note-prose li + li {
+  margin-top: 0.5em;
+}
+
+.note-prose code {
+  font-family: var(--font-mono);
+  font-size: 0.875em;
+}
+
+.note-prose :not(pre) > code {
+  background: rgb(242 239 233 / 0.1);
+  padding: 0.125em 0.375em;
+}
+
+.note-prose pre {
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  line-height: 1.6;
+  border: 1px solid rgb(242 239 233 / 0.25);
+  padding: 1rem 1.25rem;
+  overflow-x: auto;
+}
+
+.note-prose blockquote {
+  border-left: 4px solid var(--color-magenta);
+  padding-left: 1.25rem;
+  color: rgb(242 239 233 / 0.75);
+}
+
+.note-prose hr {
+  border: 0;
+  border-top: 1px solid rgb(242 239 233 / 0.25);
+  margin: 2.5em 0;
+}

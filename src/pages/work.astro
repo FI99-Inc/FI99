@@ -1,0 +1,38 @@
+---
+import Base from '../layouts/Base.astro';
+import SectionRule from '../components/SectionRule.astro';
+import ProjectRow from '../components/ProjectRow.astro';
+import { projects } from '../data/projects.js';
+
+const count = String(projects.length).padStart(2, '0');
+---
+
+<Base
+  title="Work — FI99"
+  description="Everything FI99 has shipped or is building: websites, apps, software, experiments."
+>
+  <section class="py-12 sm:py-16" aria-labelledby="all-work-heading">
+    <div class="px-4 sm:px-6">
+      <SectionRule label={`ALL WORK — ${count} ENTRIES`} />
+      <h2
+        id="all-work-heading"
+        data-split
+        class="mt-6 font-display text-[clamp(2.5rem,10vw,8rem)] font-black uppercase leading-none tracking-tight"
+      >
+        Work
+      </h2>
+      <p class="mt-6 max-w-2xl text-base text-bone/70 sm:text-lg">
+        Everything we have shipped or are still arguing about. Some of it is
+        useful. Some of it got out of hand.
+      </p>
+    </div>
+    <ul class="mt-12 list-none">
+      {projects.map((project, i) => <ProjectRow project={project} index={i} />)}
+    </ul>
+    <div class="border-t border-bone/20 px-4 py-6 sm:px-6">
+      <p class="font-mono text-[11px] tracking-[0.25em] text-bone/50">
+        [ EOF — MORE IN THE LAB ]
+      </p>
+    </div>
+  </section>
+</Base>

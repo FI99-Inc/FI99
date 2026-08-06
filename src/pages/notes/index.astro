@@ -1,0 +1,66 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import SectionRule from '../../components/SectionRule.astro';
+
+const notes = (await getCollection('notes')).sort(
+  (a, b) => b.data.date.valueOf() - a.data.date.valueOf()
+);
+
+function readingTime(body) {
+  const words = (body || '').trim().split(/\s+/).length;
+  return Math.max(1, Math.round(words / 200));
+}
+
+function fmtDate(date) {
+  return date.toISOString().slice(0, 10);
+}
+
+const count = String(notes.length).padStart(2, '0');
+---
+
+<Base
+  title="Notes — FI99"
+  description="Field notes from the FI99 lab: what we're building, breaking, and arguing about."
+>
+  <section class="py-12 sm:py-16" aria-labelledby="notes-heading">
+    <div class="px-4 sm:px-6">
+      <SectionRule label={`NOTES — ${count} ON FILE`} />
+      <h2
+        id="notes-heading"
+        data-split
+        class="mt-6 font-display text-[clamp(2.5rem,10vw,8rem)] font-black uppercase leading-none tracking-tight"
+      >
+        Notes
+      </h2>
+      <p class="mt-6 max-w-2xl text-base text-bone/70 sm:text-lg">
+        What we're building, breaking, and arguing about. No comments. Email
+        us if you disagree.
+      </p>
+    </div>
+    <ul class="mt-12 list-none border-t border-bone/20">
+      {
+        notes.map((note) => (
+          <li class="border-b border-bone/20" data-reveal>
+            <a
+              href={`/notes/${note.id}/`}
+              class="group grid grid-cols-1 gap-y-2 px-4 py-6 hover:bg-bone hover:text-void sm:grid-cols-[1fr_auto] sm:items-baseline sm:gap-x-8 sm:px-6 sm:py-8"
+            >
+              <span>
+                <h3 class="font-display text-xl font-extrabold uppercase leading-tight tracking-tight sm:text-3xl">
+                  {note.data.title}
+                </h3>
+                <p class="mt-2 text-sm text-bone/70 group-hover:text-void/80 sm:text-base">
+                  {note.data.description}
+                </p>
+              </span>
+              <span class="font-mono text-[11px] tracking-[0.2em] text-bone/60 group-hover:text-void/70 sm:text-right">
+                {fmtDate(note.data.date)} · {readingTime(note.body)} MIN READ
+              </span>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+</Base>

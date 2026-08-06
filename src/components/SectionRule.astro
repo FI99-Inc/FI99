@@ -1,0 +1,25 @@
+---
+// Divider: a fragment of the multiline stroke pattern, then a hairline
+// rule. Optional mono label reads like terminal metadata.
+const { label = '', class: className = '' } = Astro.props;
+
+const COLORS = ['#ff1f8f', '#c525c7', '#8b2bff', '#4a25ff'];
+---
+
+<div class:list={['flex items-center gap-4 sm:gap-6', className]} aria-hidden="true">
+  <svg viewBox="0 0 96 17" class="h-[17px] w-24 shrink-0" fill="none">
+    {
+      COLORS.map((c, i) => (
+        <rect x="0" y={i * 5} width="96" height="2" fill={c} />
+      ))
+    }
+  </svg>
+  {
+    label && (
+      <span class="shrink-0 font-mono text-[11px] tracking-[0.25em] text-bone/60">
+        {label}
+      </span>
+    )
+  }
+  <span class="h-px min-w-0 flex-1 bg-bone/20"></span>
+</div>

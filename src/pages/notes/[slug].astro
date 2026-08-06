@@ -1,0 +1,62 @@
+---
+import { getCollection, render } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import SectionRule from '../../components/SectionRule.astro';
+
+export async function getStaticPaths() {
+  const notes = await getCollection('notes');
+  return notes.map((note) => ({
+    params: { slug: note.id },
+    props: { note },
+  }));
+}
+
+const { note } = Astro.props;
+const { Content } = await render(note);
+
+const words = (note.body || '').trim().split(/\s+/).length;
+const minutes = Math.max(1, Math.round(words / 200));
+const date = note.data.date.toISOString().slice(0, 10);
+---
+
+<Base title={`${note.data.title} — FI99`} description={note.data.description}>
+  <article class="px-4 py-12 sm:px-6 sm:py-16">
+    <div class="mx-auto max-w-3xl">
+      <a
+        href="/notes"
+        data-scramble
+        class="font-mono text-xs tracking-[0.2em] text-bone/60 hover:text-magenta"
+      >
+        ← ALL NOTES
+      </a>
+      <header class="mt-8">
+        <SectionRule />
+        <h1
+          class="mt-6 font-display text-[clamp(1.875rem,5.5vw,4rem)] font-black uppercase leading-none tracking-tight"
+        >
+          {note.data.title}
+        </h1>
+        <p class="mt-5 font-mono text-[11px] tracking-[0.2em] text-bone/60">
+          {date} · {minutes} MIN READ
+          {
+            note.data.tags.length > 0 && (
+              <span> · {note.data.tags.join(' · ').toUpperCase()}</span>
+            )
+          }
+        </p>
+      </header>
+      <div class="note-prose mt-12">
+        <Content />
+      </div>
+      <footer class="mt-16 border-t border-bone/20 pt-6">
+        <a
+          href="/notes"
+          data-scramble
+          class="font-mono text-xs tracking-[0.2em] text-bone/60 hover:text-magenta"
+        >
+          ← ALL NOTES
+        </a>
+      </footer>
+    </div>
+  </article>
+</Base>

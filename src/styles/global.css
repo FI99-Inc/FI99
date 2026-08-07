@@ -3,6 +3,17 @@
 @import '@fontsource-variable/jetbrains-mono';
 @import 'tailwindcss';
 
+/* Hover is a pointer affordance, not a touch one. Ungated, every `hover:`
+   fires on first tap and iOS leaves the element stuck in its hover state
+   until you tap elsewhere — project rows and nav items stay inverted. */
+@custom-variant hover {
+  @media (hover: hover) {
+    &:hover {
+      @slot;
+    }
+  }
+}
+
 @theme {
   --color-void: #060606;
   --color-bone: #f2efe9;
@@ -133,8 +144,11 @@ html.motion .ml99-draw .ml99-path {
    One knob sizes the whole mark: --h is the 99 SVG's height. FI's
    font-size is derived so its cap height visually matches the SVG. */
 
+/* The floor has to stay well under 28vw or the mark stops scaling on small
+   phones: at 320px a 6.5rem floor pinned FI and 99 into each other with no
+   gap left between them. 4.75rem keeps the vw term in charge down to 272px. */
 .hero-mark {
-  --h: clamp(6.5rem, 28vw, 26rem);
+  --h: clamp(4.75rem, 28vw, 26rem);
 }
 
 .hero-fi {
@@ -145,6 +159,30 @@ html.motion .ml99-draw .ml99-path {
 .hero-99 {
   height: var(--h);
   width: auto;
+}
+
+/* Phones stack the lockup — FI over 99 — so the mark can run the full column
+   instead of splitting a 390px screen in half and leaving the hero mostly
+   empty. 1.11 is "FI"'s width-to-font-size ratio in Unbounded Black, which
+   is what keeps the two rows the same width; the svh term caps the stack on
+   short and landscape viewports so it never outgrows the hero. */
+@media (width < 40rem) {
+  .hero-mark {
+    --fi: min(calc((100vw - 2rem) / 1.11), 36svh);
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .hero-fi {
+    font-size: var(--fi);
+    line-height: 0.78;
+  }
+
+  .hero-99 {
+    width: calc(var(--fi) * 1.11);
+    height: auto;
+  }
 }
 
 /* ---- Custom cursor (desktop, fine pointers, motion allowed) ---- */

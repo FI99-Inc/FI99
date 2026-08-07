@@ -197,6 +197,14 @@ html.motion .ml99-draw .ml99-path {
   opacity: 0;
 }
 
+/* The viewBox hugs the path centerlines, so the strokes already sit half a
+   width proud of it and gravity.js drifts the inner rings 6 more units — 4
+   past the tails' 2 units of headroom. An <svg> clips to its viewBox by
+   default, which shears those edges off square. */
+.ml99 {
+  overflow: visible;
+}
+
 /* ---- Hero wordmark sizing ----
    One knob sizes the whole mark: --h is the 99 SVG's height. FI's
    font-size is derived so its cap height visually matches the SVG. */

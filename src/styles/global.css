@@ -250,6 +250,35 @@ html.motion .ml99-draw .ml99-path {
   }
 }
 
+/* ---- Header lockup orbits ----
+   Two crossed ellipses behind FI99, atomic-emblem style. Sized in em so they
+   track the wordmark's font-size, and centered on the lockup's padding box —
+   the horizontal padding is symmetric, so that is also the mark's center. At
+   4.2em wide the rotated ellipses span ~40px inside a ~52px header row, which
+   keeps them clear of the borders above and below. */
+
+.logo-orbits {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 4.2em;
+  height: 2.52em;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  opacity: 0.5;
+  transition: opacity 0.3s ease;
+}
+
+.logo-orbits ellipse {
+  stroke-width: 1.6;
+}
+
+@media (hover: hover) {
+  .logo-lockup:hover .logo-orbits {
+    opacity: 0.9;
+  }
+}
+
 /* ---- Custom cursor (desktop, fine pointers, motion allowed) ---- */
 
 html.cursor-on,

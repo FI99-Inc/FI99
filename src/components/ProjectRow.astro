@@ -2,6 +2,18 @@
 const { project, index } = Astro.props;
 
 const num = String(index + 1).padStart(2, '0');
+
+// The row sets every name in caps, which flattens how the names are actually
+// written. Splitting into same-case runs lets the originally-lowercase ones
+// render a notch smaller: KRINE keeps its capital K, PlotON keeps its ON.
+const nameRuns = [...project.name].reduce((runs, char) => {
+  const small = char !== char.toUpperCase();
+  const last = runs[runs.length - 1];
+  if (last && last.small === small) last.text += char;
+  else runs.push({ small, text: char });
+  return runs;
+}, []);
+
 const isLink = Boolean(project.link);
 const Tag = isLink ? 'a' : 'div';
 const linkAttrs = isLink
@@ -20,7 +32,11 @@ const linkAttrs = isLink
     <h3
       class="font-display text-2xl font-extrabold uppercase leading-none tracking-tight sm:text-4xl"
     >
-      {project.name}
+      {
+        nameRuns.map((run) =>
+          run.small ? <span class="text-[0.78em]">{run.text}</span> : run.text
+        )
+      }
     </h3>
     <p class="col-start-2 text-sm text-bone/70 group-hover:text-void/80 group-active:text-void/80 sm:col-start-3 sm:text-base">
       {project.oneLiner}

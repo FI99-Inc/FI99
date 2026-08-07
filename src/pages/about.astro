@@ -79,15 +79,12 @@ const founders = [
     </div>
     <ul class="mt-12 grid list-none grid-cols-1 border-t border-bone/20 sm:grid-cols-3">
       {
-        founders.map((founder, i) => (
+        founders.map((founder) => (
           <li
             class="border-b border-bone/20 px-4 py-8 sm:border-b-0 sm:border-r sm:px-6 sm:py-10 sm:last:border-r-0"
             data-reveal
           >
-            <p class="font-mono text-[11px] tracking-[0.25em] text-bone/50">
-              0{i + 1}
-            </p>
-            <h3 class="mt-4 font-display text-2xl font-extrabold uppercase leading-none tracking-tight sm:text-3xl">
+            <h3 class="font-display text-2xl font-extrabold uppercase leading-none tracking-tight sm:text-3xl">
               {founder.name}
             </h3>
             <!-- "TORONTO METROPOLITAN UNIVERSITY" at 0.2em runs to the very
@@ -105,7 +102,7 @@ const founders = [
                 target="_blank"
                 rel="noopener"
                 data-scramble
-                class="mt-1 inline-block py-4 font-mono text-[11px] tracking-[0.2em] text-bone/70 underline decoration-bone/30 underline-offset-4 hover:text-magenta hover:decoration-magenta"
+                class="mt-1 inline-block py-4 font-mono text-[11px] tracking-[0.2em] text-bone/70 underline decoration-bone/30 underline-offset-4 hover:text-magenta hover:decoration-magenta active:text-magenta active:decoration-magenta"
               >
                 LINKEDIN ↗
               </a>

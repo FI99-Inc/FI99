@@ -34,14 +34,14 @@ const selectedLabel = `SELECTED WORK — ${String(selected.length).padStart(2, '
         </p>
         <!-- TODO(fi99): [SUBLINE] — confirm this line, add a location if we want one -->
         <p class="hero-snap mt-4 font-mono text-xs tracking-[0.2em] text-bone/60 sm:text-sm">
-          AN EXPERIMENTAL STUDIO. WEBSITES, APPS, SOFTWARE.
+          AN EXPERIMENTAL STUDIO.
         </p>
       </div>
     </div>
-    <!-- 0.25em tracking pushes this label past 288px on a 320px screen. -->
-    <div class="hero-snap mt-6 flex items-center justify-between gap-6 font-mono text-[11px] tracking-[0.16em] text-bone/50 sm:mt-10 sm:tracking-[0.25em]">
-      <span>[ FI99 — EXPERIMENTAL STUDIO ]</span>
-      <span aria-hidden="true" class="hidden sm:inline">SCROLL ↓</span>
+    <!-- The scroll cue is all that is left in this row, so it can show on
+         phones too — and it keeps the hero anchored to the bottom there. -->
+    <div class="hero-snap mt-6 flex items-center justify-end font-mono text-[11px] tracking-[0.16em] text-bone/50 sm:mt-10 sm:tracking-[0.25em]">
+      <span aria-hidden="true">SCROLL ↓</span>
     </div>
   </section>
 
@@ -64,7 +64,7 @@ const selectedLabel = `SELECTED WORK — ${String(selected.length).padStart(2, '
       <a
         href="/work"
         data-scramble
-        class="-my-2 inline-block py-3 font-mono text-sm tracking-[0.2em] text-bone hover:text-magenta"
+        class="-my-2 inline-block py-3 font-mono text-sm tracking-[0.2em] text-bone hover:text-magenta active:text-magenta"
       >
         ALL WORK →
       </a>
@@ -88,7 +88,7 @@ const selectedLabel = `SELECTED WORK — ${String(selected.length).padStart(2, '
       href="/about"
       data-scramble
       data-reveal
-      class="mt-6 inline-block py-3 font-mono text-sm tracking-[0.2em] text-bone hover:text-magenta"
+      class="mt-6 inline-block py-3 font-mono text-sm tracking-[0.2em] text-bone hover:text-magenta active:text-magenta"
     >
       READ THE REST →
     </a>

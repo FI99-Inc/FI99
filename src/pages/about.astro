@@ -36,7 +36,7 @@ const founders = [
     <h2
       id="manifesto-heading"
       data-split
-      class="mt-6 font-display text-[clamp(2.5rem,10vw,8rem)] font-black uppercase leading-none tracking-tight"
+      class="mt-6 font-display text-[clamp(2rem,10vw,8rem)] font-black uppercase leading-none tracking-tight"
     >
       Manifesto
     </h2>
@@ -89,7 +89,10 @@ const founders = [
             <h3 class="mt-4 font-display text-2xl font-extrabold uppercase leading-none tracking-tight sm:text-3xl">
               {founder.name}
             </h3>
-            <p class="mt-3 font-mono text-[11px] tracking-[0.2em] text-magenta">
+            <!-- "TORONTO METROPOLITAN UNIVERSITY" at 0.2em runs to the very
+                 edge at 390px and past it below that, so ease the tracking
+                 until there is room for it. -->
+            <p class="mt-3 font-mono text-[11px] tracking-[0.12em] text-magenta sm:tracking-[0.2em]">
               [{founder.school.toUpperCase()}]
             </p>
             {founder.bio && (
@@ -101,7 +104,7 @@ const founders = [
                 target="_blank"
                 rel="noopener"
                 data-scramble
-                class="mt-4 inline-block font-mono text-[11px] tracking-[0.2em] text-bone/70 underline decoration-bone/30 underline-offset-4 hover:text-magenta hover:decoration-magenta"
+                class="mt-1 inline-block py-4 font-mono text-[11px] tracking-[0.2em] text-bone/70 underline decoration-bone/30 underline-offset-4 hover:text-magenta hover:decoration-magenta"
               >
                 LINKEDIN ↗
               </a>

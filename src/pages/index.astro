@@ -8,6 +8,7 @@ import ProjectRow from '../components/ProjectRow.astro';
 import { projects } from '../data/projects.js';
 
 const selected = projects.slice(0, 3);
+const selectedLabel = `SELECTED WORK — ${String(selected.length).padStart(2, '0')}/${String(projects.length).padStart(2, '0')}`;
 ---
 
 <Base
@@ -17,22 +18,28 @@ const selected = projects.slice(0, 3);
   <!-- Hero -->
   <section class="hero flex min-h-[calc(100svh-3.1rem)] flex-col justify-between border-b border-bone/20 px-4 pb-6 pt-8 sm:px-6 sm:pt-12">
     <h1 class="sr-only">FI99 — We create things.</h1>
-    <div class="hero-mark flex items-end justify-between" aria-hidden="true">
-      <span class="hero-fi hero-snap font-display font-black uppercase leading-none tracking-tight">
-        <span class="grad-text">FI</span>
-      </span>
-      <Multiline99 draw class="hero-99 crt-glow" />
+    <!-- On phones the mark and the tagline read as one block with the strip
+         pinned to the bottom; `sm:contents` dissolves this wrapper so wide
+         screens keep the original three-way justify-between spread. -->
+    <div class="sm:contents">
+      <div class="hero-mark flex items-end justify-between gap-4" aria-hidden="true">
+        <span class="hero-fi hero-snap font-display font-black uppercase leading-none tracking-tight">
+          <span class="grad-text">FI</span>
+        </span>
+        <Multiline99 draw class="hero-99 crt-glow" />
+      </div>
+      <div class="mt-6 sm:mt-14">
+        <p class="hero-snap font-display text-[clamp(1.375rem,3.5vw,3rem)] font-medium leading-tight">
+          We create things.
+        </p>
+        <!-- TODO(fi99): [SUBLINE] — confirm this line, add a location if we want one -->
+        <p class="hero-snap mt-4 font-mono text-xs tracking-[0.2em] text-bone/60 sm:text-sm">
+          AN EXPERIMENTAL STUDIO. WEBSITES, APPS, SOFTWARE.
+        </p>
+      </div>
     </div>
-    <div class="mt-10 sm:mt-14">
-      <p class="hero-snap font-display text-[clamp(1.375rem,3.5vw,3rem)] font-medium leading-tight">
-        We create things.
-      </p>
-      <!-- TODO(fi99): [SUBLINE] — confirm this line, add a location if we want one -->
-      <p class="hero-snap mt-4 font-mono text-xs tracking-[0.2em] text-bone/60 sm:text-sm">
-        AN EXPERIMENTAL STUDIO. WEBSITES, APPS, SOFTWARE.
-      </p>
-    </div>
-    <div class="hero-snap mt-10 flex items-center justify-between gap-6 font-mono text-[11px] tracking-[0.25em] text-bone/50">
+    <!-- 0.25em tracking pushes this label past 288px on a 320px screen. -->
+    <div class="hero-snap mt-6 flex items-center justify-between gap-6 font-mono text-[11px] tracking-[0.16em] text-bone/50 sm:mt-10 sm:tracking-[0.25em]">
       <span>[ FI99 — EXPERIMENTAL STUDIO ]</span>
       <span aria-hidden="true" class="hidden sm:inline">SCROLL ↓</span>
     </div>
@@ -41,7 +48,7 @@ const selected = projects.slice(0, 3);
   <!-- Selected work -->
   <section class="px-0 py-16 sm:py-24" aria-labelledby="work-heading">
     <div class="px-4 sm:px-6">
-      <SectionRule label="SELECTED WORK — 01/03" />
+      <SectionRule label={selectedLabel} />
       <h2
         id="work-heading"
         data-split
@@ -57,7 +64,7 @@ const selected = projects.slice(0, 3);
       <a
         href="/work"
         data-scramble
-        class="font-mono text-sm tracking-[0.2em] text-bone hover:text-magenta"
+        class="-my-2 inline-block py-3 font-mono text-sm tracking-[0.2em] text-bone hover:text-magenta"
       >
         ALL WORK →
       </a>
@@ -80,7 +87,7 @@ const selected = projects.slice(0, 3);
       href="/about"
       data-scramble
       data-reveal
-      class="mt-8 inline-block font-mono text-sm tracking-[0.2em] text-bone hover:text-magenta"
+      class="mt-6 inline-block py-3 font-mono text-sm tracking-[0.2em] text-bone hover:text-magenta"
     >
       READ THE REST →
     </a>

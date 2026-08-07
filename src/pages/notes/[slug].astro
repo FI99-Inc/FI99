@@ -25,11 +25,11 @@ const date = note.data.date.toISOString().slice(0, 10);
       <a
         href="/notes"
         data-scramble
-        class="font-mono text-xs tracking-[0.2em] text-bone/60 hover:text-magenta"
+        class="-mt-4 inline-block py-4 font-mono text-xs tracking-[0.2em] text-bone/60 hover:text-magenta"
       >
         ← ALL NOTES
       </a>
-      <header class="mt-8">
+      <header class="mt-5">
         <SectionRule />
         <h1
           class="mt-6 font-display text-[clamp(1.875rem,5.5vw,4rem)] font-black uppercase leading-none tracking-tight"
@@ -48,11 +48,11 @@ const date = note.data.date.toISOString().slice(0, 10);
       <div class="note-prose mt-12">
         <Content />
       </div>
-      <footer class="mt-16 border-t border-bone/20 pt-6">
+      <footer class="mt-16 border-t border-bone/20 pt-3">
         <a
           href="/notes"
           data-scramble
-          class="font-mono text-xs tracking-[0.2em] text-bone/60 hover:text-magenta"
+          class="inline-block py-4 font-mono text-xs tracking-[0.2em] text-bone/60 hover:text-magenta"
         >
           ← ALL NOTES
         </a>

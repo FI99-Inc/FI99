@@ -98,10 +98,12 @@ const year = new Date().getFullYear();
           © {year} FI99 — WE CREATE THINGS.
         </p>
         <!-- TODO(fi99): [SOCIALS] — replace these placeholder links, or delete this list entirely -->
-        <ul class="flex items-center gap-6 border-b border-bone/20 px-4 py-4 sm:justify-center sm:border-b-0 sm:border-r sm:px-6">
-          <li><a href="#" data-scramble class="tracking-widest hover:text-magenta">GITHUB</a></li>
-          <li><a href="#" data-scramble class="tracking-widest hover:text-magenta">INSTAGRAM</a></li>
-          <li><a href="#" data-scramble class="tracking-widest hover:text-magenta">X</a></li>
+        <!-- py-3/-my-2 grows each hit box past the 44px touch minimum without
+             changing the strip's height. "X" was an 8x16px target. -->
+        <ul class="flex min-h-12 items-stretch gap-5 border-b border-bone/20 px-4 sm:justify-center sm:gap-6 sm:border-b-0 sm:border-r sm:px-6">
+          <li class="flex"><a href="#" data-scramble class="flex items-center px-1 tracking-widest hover:text-magenta">GITHUB</a></li>
+          <li class="flex"><a href="#" data-scramble class="flex items-center px-1 tracking-widest hover:text-magenta">INSTAGRAM</a></li>
+          <li class="flex"><a href="#" data-scramble class="flex items-center px-1 tracking-widest hover:text-magenta">X</a></li>
         </ul>
         <p class="flex items-center px-4 py-4 tracking-widest text-bone/60 sm:justify-end sm:px-6">
           FI99.CA

@@ -7,7 +7,10 @@ const COLORS = ['#ff1f8f', '#c525c7', '#8b2bff', '#4a25ff'];
 ---
 
 <div class:list={['flex items-center gap-4 sm:gap-6', className]} aria-hidden="true">
-  <svg viewBox="0 0 96 17" class="h-[17px] w-24 shrink-0" fill="none">
+  <!-- The stroke fragment and the label are both shrink-0, so at 320px a
+       96px rule plus a 22-character label pushed the page into horizontal
+       scroll. Both ease off below sm, then return to full size. -->
+  <svg viewBox="0 0 96 17" class="h-[17px] w-16 shrink-0 sm:w-24" fill="none">
     {
       COLORS.map((c, i) => (
         <rect x="0" y={i * 5} width="96" height="2" fill={c} />
@@ -16,7 +19,7 @@ const COLORS = ['#ff1f8f', '#c525c7', '#8b2bff', '#4a25ff'];
   </svg>
   {
     label && (
-      <span class="shrink-0 font-mono text-[11px] tracking-[0.25em] text-bone/60">
+      <span class="shrink-0 font-mono text-[11px] tracking-[0.14em] text-bone/60 sm:tracking-[0.25em]">
         {label}
       </span>
     )

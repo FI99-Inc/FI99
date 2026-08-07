@@ -8,6 +8,7 @@ import ProjectRow from '../components/ProjectRow.astro';
 import { projects } from '../data/projects.js';
 
 const selected = projects.slice(0, 3);
+const selectedLabel = `SELECTED WORK — ${String(selected.length).padStart(2, '0')}/${String(projects.length).padStart(2, '0')}`;
 ---
 
 <Base
@@ -41,7 +42,7 @@ const selected = projects.slice(0, 3);
   <!-- Selected work -->
   <section class="px-0 py-16 sm:py-24" aria-labelledby="work-heading">
     <div class="px-4 sm:px-6">
-      <SectionRule label="SELECTED WORK — 01/03" />
+      <SectionRule label={selectedLabel} />
       <h2
         id="work-heading"
         data-split

@@ -44,7 +44,7 @@ function heroIntro() {
 
 function headingReveals() {
   gsap.utils.toArray('[data-split]').forEach((el) => {
-    const split = new SplitText(el, { type: 'chars', mask: 'chars' });
+    const split = new SplitText(el, { type: 'chars,words', mask: 'chars' });
     gsap.from(split.chars, {
       yPercent: 120,
       duration: 0.45,

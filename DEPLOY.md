@@ -1,73 +1,91 @@
-# Deploying fi99.ca to Vercel
+# Deploying fi99.ca to GitHub Pages
 
-The site is fully static (`astro build` → `dist/`). No adapter, no server
-functions, no environment variables.
+The site is fully static (`astro build` → `dist/`), so GitHub Pages can host
+it directly — no Vercel involved. The workflow at
+`.github/workflows/deploy.yml` builds and publishes on every push to `main`.
+
+> Note: GitHub Pages is free for **public** repos. A private repo needs a
+> paid GitHub plan for Pages.
 
 ## 1. Push the repo
 
-Create a repo on GitHub (or GitLab/Bitbucket) and push:
+Create a repo on GitHub and push:
 
 ```sh
-git remote add origin git@github.com:YOUR_ORG/fi99.git
+git remote add origin git@github.com:YOUR_USER/fi99.git
 git push -u origin main
 ```
 
-## 2. Create the Vercel project
+The push triggers the deploy workflow. It will fail its deploy step until
+Pages is enabled — that's expected; do step 2 and re-run it (or push again).
 
-Either import in the dashboard or use the CLI.
+## 2. Enable GitHub Pages
 
-**Dashboard:** [vercel.com/new](https://vercel.com/new) → import the repo.
-Vercel auto-detects Astro. Confirm:
+Repo → **Settings → Pages**:
 
-- Framework preset: **Astro**
-- Build command: `npm run build`
-- Output directory: `dist`
+- Under **Build and deployment → Source**, choose **GitHub Actions**.
 
-**CLI:**
+That's it — the checked-in workflow handles install, build, and publish.
 
-```sh
-npm i -g vercel
-vercel          # link + preview deploy, accept the detected Astro defaults
-vercel --prod   # production deploy
+## 3. Point fi99.ca at GitHub
+
+### DNS records (at your registrar)
+
+For the apex domain, add four **A** records on `@`:
+
+```
+185.199.108.153
+185.199.109.153
+185.199.110.153
+185.199.111.153
 ```
 
-Every push to `main` now deploys to production; every other branch gets a
-preview URL.
+Optionally add the matching **AAAA** records for IPv6:
 
-## 3. Point fi99.ca at Vercel
+```
+2606:50c0:8000::153
+2606:50c0:8001::153
+2606:50c0:8002::153
+2606:50c0:8003::153
+```
 
-In the Vercel dashboard: **Project → Settings → Domains → Add** → enter
-`fi99.ca`. Also add `www.fi99.ca` and set it to redirect to the apex.
+For `www`, add a **CNAME** record pointing to `YOUR_USER.github.io`
+(your GitHub username/org, not the repo name).
 
-Vercel then shows the DNS records it wants. Two routes — pick one:
+Check GitHub's current docs if anything looks off — these IPs are
+GitHub's published Pages addresses as of mid-2026.
 
-### Option A — keep your current registrar's DNS (A/CNAME)
+### Tell GitHub about the domain
 
-At your registrar (where fi99.ca is registered), add the records exactly as
-shown on the project's Domains screen — do not copy values from docs or
-memory, the dashboard is the source of truth. As of Vercel's current docs
-these are typically:
+Repo → **Settings → Pages → Custom domain**: enter `fi99.ca` and save.
+GitHub runs a DNS check, then provisions a TLS certificate. Once it's
+issued, tick **Enforce HTTPS**.
 
-| Type  | Name | Value                  |
-| ----- | ---- | ---------------------- |
-| A     | `@`  | `216.198.79.1`         |
-| CNAME | `www`| `<the cname shown in the dashboard>` |
+Also strongly recommended: **profile Settings → Pages → Add a verified
+domain** for `fi99.ca`. This proves domain ownership account-wide and
+prevents anyone else from claiming the domain on Pages if the repo is ever
+deleted or renamed.
 
-### Option B — hand DNS to Vercel (nameservers)
-
-On the same Domains screen choose the **Vercel nameservers** option, then at
-your registrar replace the nameservers with the two Vercel shows you
-(currently `ns1.vercel-dns.com` and `ns2.vercel-dns.com`). Simplest
-long-term: Vercel manages records and certificates automatically.
-
-Either way, wait for DNS to propagate (minutes to a few hours). Vercel
-issues the TLS certificate automatically once the domain verifies.
+`www.fi99.ca` will redirect to the apex automatically once both records
+exist and the custom domain is set.
 
 ## 4. Post-deploy checklist
 
-- `https://fi99.ca/` renders, `www.fi99.ca` redirects to apex
+- `https://fi99.ca/` renders; `www.fi99.ca` redirects to apex; HTTPS enforced
 - `https://fi99.ca/sitemap-index.xml` and `/robots.txt` resolve
+- The 404 page works: visit any bogus path (Pages serves Astro's `404.html`)
 - Paste a page URL into an OG debugger (e.g. opengraph.xyz) — the 1200×630
   card with the wordmark should appear
 - All `// TODO(fi99):` placeholders replaced before announcing:
   `grep -rn "TODO(fi99)" src/`
+
+## Trade-offs vs Vercel (for the record)
+
+- No per-branch preview deployments (Actions can be extended to do it, but
+  it's not built in).
+- DNS is static IPs, no managed nameserver option.
+- Deploys are a minute or two slower (full Actions run per push).
+
+None of these matter for a static studio site. If previews ever matter,
+the site deploys to Vercel unchanged: import the repo at vercel.com/new
+(framework preset Astro, output `dist`) and follow the domain prompts.

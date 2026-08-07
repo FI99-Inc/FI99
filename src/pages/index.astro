@@ -26,7 +26,7 @@ const selectedLabel = `SELECTED WORK — ${String(selected.length).padStart(2, '
         <span class="hero-fi hero-snap font-display font-black uppercase leading-none tracking-tight">
           <span class="grad-text">FI</span>
         </span>
-        <Multiline99 draw class="hero-99 crt-glow" />
+        <Multiline99 draw interactive class="hero-99 crt-glow" />
       </div>
       <div class="mt-6 sm:mt-14">
         <p class="hero-snap font-display text-[clamp(1.375rem,3.5vw,3rem)] font-medium leading-tight">
@@ -40,7 +40,17 @@ const selectedLabel = `SELECTED WORK — ${String(selected.length).padStart(2, '
     </div>
     <!-- 0.25em tracking pushes this label past 288px on a 320px screen. -->
     <div class="hero-snap mt-6 flex items-center justify-between gap-6 font-mono text-[11px] tracking-[0.16em] text-bone/50 sm:mt-10 sm:tracking-[0.25em]">
-      <span>[ FI99 — EXPERIMENTAL STUDIO ]</span>
+      <!-- The mark only answers a pointer once JS and motion are both on, so
+           the instruction swaps in for the brand tag rather than replacing it
+           outright — nothing here promises an interaction that can't happen. -->
+      <span>
+        <span class="mark-tag">[ FI99 — EXPERIMENTAL STUDIO ]</span>
+        <span class="mark-hint"
+          >[ <span class="mark-hint-fine">POINT AT THE 99</span><span
+            class="mark-hint-touch">TAP THE 99</span
+          > ]</span
+        >
+      </span>
       <span aria-hidden="true" class="hidden sm:inline">SCROLL ↓</span>
     </div>
   </section>

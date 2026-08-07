@@ -140,6 +140,43 @@ html.motion .ml99-draw .ml99-path {
   opacity: 0;
 }
 
+/* ---- Interactive mark ----
+   The hint replaces the brand tag only when the mark can actually respond:
+   html.motion means JS ran and reduced motion is off, which is exactly the
+   condition mark99.js arms under. */
+
+.mark-hint {
+  display: none;
+}
+
+html.motion .mark-hint {
+  display: inline;
+}
+
+html.motion .mark-tag {
+  display: none;
+}
+
+.mark-hint-fine {
+  display: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .mark-hint-fine {
+    display: inline;
+  }
+
+  .mark-hint-touch {
+    display: none;
+  }
+}
+
+/* The rings are rewritten every frame while engaged; keeping the strokes on
+   their own layer stops the filter from re-rasterizing the whole hero. */
+[data-mark99] .ml99-path {
+  will-change: transform;
+}
+
 /* ---- Hero wordmark sizing ----
    One knob sizes the whole mark: --h is the 99 SVG's height. FI's
    font-size is derived so its cap height visually matches the SVG. */

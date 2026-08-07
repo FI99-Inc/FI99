@@ -84,6 +84,24 @@
   color: transparent;
 }
 
+/* Oversized canvas so motion.js can slide the gradient through the glyphs
+   as the page scrolls. The stops cycle magenta→volt twice so the sweep
+   reads clearly; any static slice still looks like the brand gradient,
+   which is what you get when motion never runs (position stays 0 0). */
+.grad-scroll {
+  background-image: linear-gradient(
+    135deg,
+    var(--color-magenta),
+    var(--color-violet),
+    var(--color-volt),
+    var(--color-magenta),
+    var(--color-violet),
+    var(--color-volt)
+  );
+  background-size: 300% 300%;
+  background-position: 0% 0%;
+}
+
 .grad-rule {
   height: 6px;
   background-image: linear-gradient(
@@ -118,6 +136,45 @@
 .crt-glow {
   filter: drop-shadow(0 0 6px rgb(255 31 143 / 0.55))
     drop-shadow(0 0 22px rgb(139 43 255 / 0.35));
+}
+
+/* ---- Starfield ----
+   Fixed full-viewport layer at z-index -1: above the html background,
+   below all in-flow content. body must stay background-free (html carries
+   the void color) or its paint would cover the stars. */
+
+.starfield {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.starfield svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Base alpha lives in each star's fill-opacity; the twinkle animates the
+   element opacity on top so every star keeps its own brightness. */
+@media (prefers-reduced-motion: no-preference) {
+  .star-g0 {
+    animation: star-twinkle 4.5s ease-in-out infinite;
+  }
+
+  .star-g1 {
+    animation: star-twinkle 7s ease-in-out 1.6s infinite;
+  }
+
+  .star-g2 {
+    animation: star-twinkle 9.5s ease-in-out 3.2s infinite;
+  }
+}
+
+@keyframes star-twinkle {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
 }
 
 /* ---- Motion scaffolding ----

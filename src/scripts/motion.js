@@ -67,6 +67,21 @@ function scrollReveals() {
   });
 }
 
+function gradientScroll() {
+  const els = gsap.utils.toArray('.grad-scroll');
+  if (!els.length) return;
+  gsap.to(els, {
+    backgroundPosition: '100% 100%',
+    ease: 'none',
+    scrollTrigger: {
+      trigger: document.body,
+      start: 'top top',
+      end: 'bottom bottom',
+      scrub: 0.6,
+    },
+  });
+}
+
 function tickers() {
   gsap.utils.toArray('.ticker-track').forEach((track) => {
     gsap.to(track, { xPercent: -50, duration: 22, ease: 'none', repeat: -1 });
@@ -78,6 +93,7 @@ mm.add('(prefers-reduced-motion: no-preference)', () => {
   heroIntro();
   headingReveals();
   scrollReveals();
+  gradientScroll();
   tickers();
   initScramble();
 });

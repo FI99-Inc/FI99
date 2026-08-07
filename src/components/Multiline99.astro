@@ -2,7 +2,9 @@
 // The signature mark: the logo's "99" rebuilt as four concentric strokes
 // per digit — bowl (full circle) + tail (hard flat-cut vertical), stepped
 // through the brand colors from magenta out to volt in.
-const { class: className = '', draw = false } = Astro.props;
+// strokeWidth is a knob for small renderings: at header size the default
+// 3.5 scales down to sub-pixel hairlines that smear together.
+const { class: className = '', draw = false, strokeWidth = 3.5 } = Astro.props;
 
 const CX = 42;
 const CY = 42;
@@ -33,7 +35,7 @@ const digit = RADII.map((r, i) => ({
           class="ml99-path"
           d={p.d}
           stroke={p.color}
-          stroke-width="3.5"
+          stroke-width={strokeWidth}
           stroke-linecap="butt"
         />
       ))
@@ -46,7 +48,7 @@ const digit = RADII.map((r, i) => ({
           class="ml99-path"
           d={p.d}
           stroke={p.color}
-          stroke-width="3.5"
+          stroke-width={strokeWidth}
           stroke-linecap="butt"
         />
       ))

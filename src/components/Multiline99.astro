@@ -2,16 +2,9 @@
 // The signature mark: the logo's "99" rebuilt as four concentric strokes
 // per digit — bowl (full circle) + tail (hard flat-cut vertical), stepped
 // through the brand colors from magenta out to volt in.
-//
-// `interactive` arms the mark as an instrument: mark99.js decouples the
-// rings under the pointer and pushes signal noise through the warp filter
-// below. Everything it needs is expressed as data attributes so the script
-// never has to restate this geometry.
-const {
-  class: className = '',
-  draw = false,
-  interactive = false,
-} = Astro.props;
+// strokeWidth is a knob for small renderings: at header size the default
+// 3.5 scales down to sub-pixel hairlines that smear together.
+const { class: className = '', draw = false, strokeWidth = 3.5 } = Astro.props;
 
 const CX = 42;
 const CY = 42;
@@ -20,22 +13,12 @@ const RADII = [40, 32, 24, 16];
 const COLORS = ['#ff1f8f', '#c525c7', '#8b2bff', '#4a25ff'];
 const DIGIT_DX = 96;
 
-// The pointer measures its distance to this point, not to the bowl center:
-// sitting below the bowl, it weights the tail into the falloff so the whole
-// digit responds instead of just its head.
-const ANCHOR_Y = 66;
-
-// One filter per instance — two marks on a page must not share an id.
-const warpId = `ml99-warp-${Math.random().toString(36).slice(2, 9)}`;
-
 const digit = RADII.map((r, i) => ({
   color: COLORS[i],
   d: `M ${CX + r} ${CY} A ${r} ${r} 0 1 1 ${CX - r} ${CY} A ${r} ${r} 0 1 1 ${
     CX + r
   } ${CY} L ${CX + r} ${TAIL_Y}`,
 }));
-
-const digits = [0, DIGIT_DX];
 ---
 
 <svg
@@ -43,62 +26,31 @@ const digits = [0, DIGIT_DX];
   fill="none"
   role="img"
   aria-label="99"
-  data-mark99={interactive ? '' : undefined}
   class:list={['ml99', draw && 'ml99-draw', className]}
 >
-  {
-    interactive && (
-      <defs>
-        {/* Static noise field. Only `scale` moves, and it rests at 0 — the
-            script detaches the filter entirely when the pointer leaves, so
-            an untouched mark costs nothing to composite. */}
-        <filter
-          id={warpId}
-          x="-25%"
-          y="-25%"
-          width="150%"
-          height="150%"
-          color-interpolation-filters="sRGB"
-        >
-          <feTurbulence
-            type="fractalNoise"
-            baseFrequency="0.011 0.042"
-            numOctaves="1"
-            seed="9"
-            result="ml99-noise"
-          />
-          <feDisplacementMap
-            data-mark99-disp
-            in="SourceGraphic"
-            in2="ml99-noise"
-            scale="0"
-            xChannelSelector="R"
-            yChannelSelector="G"
-          />
-        </filter>
-      </defs>
-    )
-  }
-  <g data-mark99-warp data-warp-filter={interactive ? `url(#${warpId})` : undefined}>
+  <g>
     {
-      digits.map((dx) => (
-        <g
-          class="ml99-digit"
-          transform={`translate(${dx} 0)`}
-          data-cx={CX + dx}
-          data-cy={ANCHOR_Y}
-        >
-          {digit.map((p, ring) => (
-            <path
-              class="ml99-path"
-              data-ring={ring}
-              d={p.d}
-              stroke={p.color}
-              stroke-width="3.5"
-              stroke-linecap="butt"
-            />
-          ))}
-        </g>
+      digit.map((p) => (
+        <path
+          class="ml99-path"
+          d={p.d}
+          stroke={p.color}
+          stroke-width={strokeWidth}
+          stroke-linecap="butt"
+        />
+      ))
+    }
+  </g>
+  <g transform={`translate(${DIGIT_DX} 0)`}>
+    {
+      digit.map((p) => (
+        <path
+          class="ml99-path"
+          d={p.d}
+          stroke={p.color}
+          stroke-width={strokeWidth}
+          stroke-linecap="butt"
+        />
       ))
     }
   </g>

@@ -1,5 +1,7 @@
 ---
 import '../styles/global.css';
+import Multiline99 from '../components/Multiline99.astro';
+import Starfield from '../components/Starfield.astro';
 import displayFontUrl from '@fontsource-variable/unbounded/files/unbounded-latin-wght-normal.woff2?url';
 
 const {
@@ -51,7 +53,10 @@ const year = new Date().getFullYear();
     </script>
     <slot name="head" />
   </head>
-  <body class="bg-void font-sans text-bone">
+  <!-- No background on body: html carries the void color, and painting it
+       here again would sit on top of the z-index -1 starfield. -->
+  <body class="font-sans text-bone">
+    <Starfield />
     <a
       href="#main"
       class="absolute left-4 top-4 z-50 -translate-y-24 bg-magenta px-4 py-2 font-mono text-xs uppercase tracking-widest text-void transition-transform focus:translate-y-0"
@@ -63,10 +68,11 @@ const year = new Date().getFullYear();
       <div class="flex items-stretch justify-between">
         <a
           href="/"
-          class="flex items-center border-r border-bone/20 px-4 py-3 font-display text-lg font-black tracking-tight sm:px-6"
+          class="flex items-center gap-[0.12em] border-r border-bone/20 px-4 py-3 font-display text-lg font-black tracking-tight sm:px-6"
           aria-label="FI99 home"
         >
-          <span class="grad-text">FI99</span>
+          <span class="grad-text grad-scroll">FI</span>
+          <Multiline99 strokeWidth={6} class="h-[1.05em] w-auto" />
         </a>
         <nav aria-label="Main">
           <ul class="flex h-full items-stretch">
@@ -116,6 +122,7 @@ const year = new Date().getFullYear();
     <script>
       import '../scripts/motion.js';
       import '../scripts/cursor.js';
+      import '../scripts/gravity.js';
     </script>
   </body>
 </html>

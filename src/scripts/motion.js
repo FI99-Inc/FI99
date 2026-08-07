@@ -5,7 +5,6 @@ import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { SplitText } from 'gsap/SplitText';
 import { initScramble } from './scramble.js';
-import { initMark99, armMark99Retrace } from './mark99.js';
 
 gsap.registerPlugin(ScrollTrigger, SplitText);
 
@@ -41,10 +40,6 @@ function heroIntro() {
       svg ? '-=0.2' : 0
     );
   }
-
-  // The scroll re-trace reads the dash offset the intro lands on, so it can
-  // only be built once the draw has finished.
-  tl.eventCallback('onComplete', armMark99Retrace);
 }
 
 function headingReveals() {
@@ -72,6 +67,21 @@ function scrollReveals() {
   });
 }
 
+function gradientScroll() {
+  const els = gsap.utils.toArray('.grad-scroll');
+  if (!els.length) return;
+  gsap.to(els, {
+    backgroundPosition: '100% 100%',
+    ease: 'none',
+    scrollTrigger: {
+      trigger: document.body,
+      start: 'top top',
+      end: 'bottom bottom',
+      scrub: 0.6,
+    },
+  });
+}
+
 function tickers() {
   gsap.utils.toArray('.ticker-track').forEach((track) => {
     gsap.to(track, { xPercent: -50, duration: 22, ease: 'none', repeat: -1 });
@@ -80,10 +90,10 @@ function tickers() {
 
 const mm = gsap.matchMedia();
 mm.add('(prefers-reduced-motion: no-preference)', () => {
-  initMark99();
   heroIntro();
   headingReveals();
   scrollReveals();
+  gradientScroll();
   tickers();
   initScramble();
 });

@@ -84,8 +84,40 @@
 /* Oversized canvas so motion.js can slide the gradient through the glyphs
    as the page scrolls. The stops cycle magenta→volt twice so the sweep
    reads clearly; any static slice still looks like the brand gradient,
-   which is what you get when motion never runs (position stays 0 0). */
+   which is what you get when motion never runs (both vars stay at rest).
+
+   Two drivers write here — scroll progress and pointer position — so each
+   owns its own variable and the position is composed in CSS. If they both
+   tweened background-position they would clobber each other.
+
+   Only a third of the gradient is visible at once, so the cursor gets a
+   deliberately small ±6% of the travel. Give it more and it slides the
+   window clean past magenta into the violet→volt stretch, and the mark
+   reads as flat purple — which is the whole reason the amplitude is a
+   budget rather than a free variable.
+
+   Scroll keeps the rest, but runs 6→94 instead of 0→100. That 6% of
+   headroom at each end is what lets the cursor pull *down* as well as up:
+   resting the sweep at a hard 0% would clamp the entire left half of the
+   screen to one value and leave the mark dead to half the cursor's range.
+   Six is small enough that the resting mark still opens on magenta.
+
+   The 6 + 88 + ±6 budget lands inside 0–100% on its own, and it has to:
+   overshooting either end drags the tiled image's volt→magenta seam into
+   view, so anyone retuning these numbers must keep them summing to 100.
+   Do NOT reach for clamp() to enforce that here — Chrome updates the
+   computed value but never repaints the background when a custom property
+   inside a clamp() in background-position changes, which silently freezes
+   the whole effect while every devtools reading still looks correct. The
+   pointer is clamped in motion.js instead, where it actually holds.
+
+   --grad-x/y are measured from 0.5, so a centred pointer contributes
+   nothing and the untouched state (no JS, touch, reduced motion) is exactly
+   what scroll alone would paint. */
 .grad-scroll {
+  --grad-scroll: 0;
+  --grad-x: 0.5;
+  --grad-y: 0.5;
   background-image: linear-gradient(
     135deg,
     var(--color-magenta),
@@ -96,7 +128,8 @@
     var(--color-volt)
   );
   background-size: 300% 300%;
-  background-position: 0% 0%;
+  background-position: calc((var(--grad-scroll) * 88 + 6 + (var(--grad-x) - 0.5) * 12) * 1%)
+    calc((var(--grad-scroll) * 88 + 6 + (var(--grad-y) - 0.5) * 12) * 1%);
 }
 
 .grad-rule {

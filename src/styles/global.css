@@ -258,6 +258,11 @@
   inset: 0;
   z-index: -1;
   pointer-events: none;
+  /* Written by motion.js on scroll, read by every star below. Setting them
+     on the container means a frame of scrolling is one style write, not one
+     per star. */
+  --star-warp: 0;
+  --star-lag: 0px;
 }
 
 .starfield svg {
@@ -271,14 +276,42 @@
 @media (prefers-reduced-motion: no-preference) {
   .star-g0 {
     animation: star-twinkle 4.5s ease-in-out infinite;
+    --star-depth: 1;
   }
 
   .star-g1 {
     animation: star-twinkle 7s ease-in-out 1.6s infinite;
+    --star-depth: 0.62;
   }
 
   .star-g2 {
     animation: star-twinkle 9.5s ease-in-out 3.2s infinite;
+    --star-depth: 0.34;
+  }
+
+  /* Scroll trails. The field is position:fixed, so a scroll moves nothing
+     here on its own — the streak is what sells the sky as a layer behind
+     the page rather than wallpaper printed on it.
+
+     scaleY smears each dot along the scroll axis; --star-depth scales both
+     the smear and the lag per twinkle group, so the three groups pull apart
+     into near and far planes instead of moving as one sheet. fill-box is
+     load-bearing: without it transform-origin resolves against the SVG
+     viewport, not the circle, and scaling flings every star across the sky.
+
+     The lag is velocity-derived, never position-derived — it springs back
+     to 0 the moment scrolling stops, so the field can never creep away from
+     where it was authored no matter how long the page is. */
+  .starfield circle {
+    transform-box: fill-box;
+    transform-origin: center;
+    transform: translateY(calc(var(--star-lag) * var(--star-depth)))
+      scaleY(calc(1 + var(--star-warp) * var(--star-depth) * 6));
+    /* Smeared light is dimmer light: the same star spread over a longer
+       streak. Without this the trails read as the sky getting brighter as
+       you scroll, which is the tell of a fake. --star-o carries each star's
+       authored alpha, since this overrides the fill-opacity attribute. */
+    fill-opacity: calc(var(--star-o) * (1 - var(--star-warp) * var(--star-depth) * 0.5));
   }
 }
 

@@ -151,6 +151,76 @@ function gradientPointer() {
   };
 }
 
+// Scroll velocity smears the starfield into short trails. Read straight off
+// window.scrollY rather than from Lenis: Lenis runs with syncTouch off, so on
+// a phone the platform scrolls natively and Lenis never sees the velocity.
+// scrollY is true for wheel, touch, keyboard and anchor jumps alike.
+function starTrails() {
+  const field = document.querySelector('.starfield');
+  if (!field) return null;
+
+  // px per 60fps frame that counts as full tilt.
+  const V_MAX = 48;
+  const LAG_MAX = 12;
+
+  let last = null;
+  let warp = 0;
+  let lag = 0;
+  let idle = false;
+
+  const follow = (time, deltaTime) => {
+    const y = window.scrollY;
+    // First frame after boot has no previous sample, and a swap resets the
+    // scroll to 0 — differencing against that would fire a full-tilt streak
+    // on arrival at every page.
+    if (last === null) {
+      last = y;
+      return;
+    }
+    // Normalised to a 60fps frame so the streak is the same length on a
+    // 144Hz display as on a 60Hz one.
+    const v = ((y - last) / Math.max(deltaTime, 1)) * 16.667;
+    last = y;
+
+    const target = Math.min(Math.abs(v) / V_MAX, 1);
+    // Asymmetric on purpose, and the whole trick: snap into the streak,
+    // ease out of it. Decaying as fast as it builds would read as the field
+    // breathing with the scroll. The slow tail is what the eye reads as a
+    // trail being left behind.
+    const tau = target > warp ? 45 : 165;
+    warp += (target - warp) * (1 - Math.exp(-deltaTime / tau));
+
+    // Stars lag against the scroll — down the page shifts them up — which is
+    // how a distant layer behaves. Clamped to the same full-tilt velocity so
+    // a violent flick cannot throw the field off screen.
+    const lagTarget = -Math.max(-1, Math.min(1, v / V_MAX)) * LAG_MAX;
+    lag += (lagTarget - lag) * (1 - Math.exp(-deltaTime / 110));
+
+    const settled = warp < 0.002 && Math.abs(lag) < 0.05;
+    // One last write to land exactly on rest, then nothing until the page
+    // moves again — an idle sky must not repaint 170 stars every frame.
+    if (settled && idle) return;
+    if (settled) {
+      warp = 0;
+      lag = 0;
+    }
+    idle = settled;
+
+    field.style.setProperty('--star-warp', warp.toFixed(4));
+    field.style.setProperty('--star-lag', `${lag.toFixed(2)}px`);
+  };
+
+  gsap.ticker.add(follow);
+
+  return () => {
+    gsap.ticker.remove(follow);
+    // The field is transition:persist, so it outlives this page — leaving a
+    // stale streak stamped on it would carry over to the next one.
+    field.style.removeProperty('--star-warp');
+    field.style.removeProperty('--star-lag');
+  };
+}
+
 let mm;
 
 function boot() {
@@ -169,10 +239,10 @@ function boot() {
     headingReveals();
     scrollReveals();
     gradientScroll();
-    const stopPointer = gradientPointer();
+    const stops = [gradientPointer(), starTrails()];
     initScramble();
     // matchMedia runs this on revert, which teardown() triggers per swap.
-    return () => stopPointer?.();
+    return () => stops.forEach((stop) => stop?.());
   });
 }
 

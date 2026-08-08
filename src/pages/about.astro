@@ -1,44 +1,88 @@
 ---
 import Base from '../layouts/Base.astro';
 import SectionRule from '../components/SectionRule.astro';
+import { opening, principles, closing } from '../data/manifesto.js';
+import { people } from '../data/people.js';
+
+// The concession is the whole argument, so both halves of it are set as
+// display type rather than body copy. The rest steps down to reading size.
+const count = String(principles.length).padStart(2, '0');
 ---
 
 <Base
   title="About — FI99"
-  description="FI99 is a collective of people who build things because the ideas would not leave us alone."
+  description="You are early. So are we. The nine things FI99 holds to be true."
 >
-  <!-- Manifesto -->
-  <section class="px-4 py-12 sm:px-6 sm:py-16" aria-labelledby="manifesto-heading">
-    <SectionRule label="MANIFESTO — FULL TEXT" />
-    <h2
-      id="manifesto-heading"
-      data-split
-      class="mt-6 font-display text-[clamp(2rem,10vw,8rem)] font-black uppercase leading-none tracking-tight"
-    >
-      Manifesto
-    </h2>
-    <!-- TODO(fi99): placeholder manifesto — structure and length are right,
-         rewrite the words in our own voice before launch -->
-    <div
-      data-reveal
-      class="mt-10 max-w-5xl space-y-8 text-[clamp(1.375rem,3.2vw,2.5rem)] font-medium leading-snug"
-    >
-      <p>
-        FI99 is a collective of people who build things because the ideas would
-        not leave us alone. We view it as an opportunity to learn, and to
-        explore a variety of categories.
+  <section class="py-12 sm:py-16" aria-labelledby="manifesto-heading">
+    <div class="px-4 sm:px-6">
+      <SectionRule label={`MANIFESTO — ${count} PRINCIPLES`} />
+      <h2
+        id="manifesto-heading"
+        data-split
+        class="mt-6 font-display text-[clamp(2rem,10vw,8rem)] font-black uppercase leading-none tracking-tight"
+      >
+        Manifesto
+      </h2>
+
+      <p
+        data-split
+        class="mt-10 font-display text-[clamp(1.875rem,7.5vw,4.5rem)] font-black uppercase leading-none tracking-tight"
+      >
+        {opening.lead}
       </p>
-      <p>
-        Some things we make are useful. Some are jokes that got out of hand.
-        All of them ship.
+      <p
+        data-split
+        class="mt-3 font-display text-[clamp(1.875rem,7.5vw,4.5rem)] font-black uppercase leading-none tracking-tight text-bone/50"
+      >
+        {opening.admission}
       </p>
-      <p>
-        If you want something built, or you want to argue about whether it
-        should exist, <a
-          href="/#contact-heading"
-          class="grad-text underline decoration-magenta underline-offset-4 hover:decoration-2">email us</a
-        >.
+      <div
+        data-reveal
+        class="mt-8 max-w-3xl space-y-5 text-[clamp(1.0625rem,2vw,1.375rem)] leading-relaxed text-bone/80"
+      >
+        {opening.body.map((line) => <p>{line}</p>)}
+      </div>
+    </div>
+
+    <!-- Numbered rows rather than paragraphs: the repeated structure is what
+         makes a line of this quotable on its own, and the bordered-row rhythm
+         is the same one /work and /team already use. -->
+    <ol class="mt-12 list-none border-b border-bone/20">
+      {
+        principles.map((principle, i) => (
+          <li class="border-t border-bone/20" data-reveal>
+            <div class="grid grid-cols-1 gap-y-2 px-4 py-6 sm:grid-cols-[auto_1fr] sm:items-baseline sm:gap-x-8 sm:px-6 sm:py-8">
+              <span class="font-mono text-[11px] tracking-[0.25em] text-magenta sm:text-xs">
+                {String(i + 1).padStart(2, '0')}
+              </span>
+              <p class="text-[clamp(1.25rem,3vw,2rem)] font-medium leading-snug">
+                {principle}
+              </p>
+            </div>
+          </li>
+        ))
+      }
+    </ol>
+
+    <div class="px-4 sm:px-6">
+      <div
+        data-reveal
+        class="mt-12 max-w-3xl space-y-5 text-[clamp(1.0625rem,2vw,1.375rem)] leading-relaxed text-bone/80"
+      >
+        {closing.map((line) => <p>{line}</p>)}
+      </div>
+
+      <!-- Signed, because the closing line promises it is. Pulled from
+           people.js so a fourth name never has to be added twice. -->
+      <p class="mt-12 font-mono text-[11px] tracking-[0.25em] text-bone/50">
+        [ SIGNED ]
       </p>
+      <ul
+        data-reveal
+        class="mt-4 flex list-none flex-wrap gap-x-8 gap-y-2 font-mono text-[11px] tracking-[0.2em] text-bone/70 sm:text-xs"
+      >
+        {people.map((person) => <li>{person.name.toUpperCase()}</li>)}
+      </ul>
     </div>
   </section>
 

@@ -2,13 +2,13 @@
 import Base from '../layouts/Base.astro';
 import Multiline99 from '../components/Multiline99.astro';
 import SectionRule from '../components/SectionRule.astro';
-import Ticker from '../components/Ticker.astro';
 import ContactStrip from '../components/ContactStrip.astro';
 import ProjectRow from '../components/ProjectRow.astro';
+import PersonCard from '../components/PersonCard.astro';
 import { projects } from '../data/projects.js';
+import { people } from '../data/people.js';
 
 const selected = projects.slice(0, 3);
-const selectedLabel = `SELECTED WORK — ${String(selected.length).padStart(2, '0')}/${String(projects.length).padStart(2, '0')}`;
 ---
 
 <Base
@@ -48,7 +48,7 @@ const selectedLabel = `SELECTED WORK — ${String(selected.length).padStart(2, '
   <!-- Selected work -->
   <section class="px-0 py-16 sm:py-24" aria-labelledby="work-heading">
     <div class="px-4 sm:px-6">
-      <SectionRule label={selectedLabel} />
+      <SectionRule label="SELECTED WORK" />
       <h2
         id="work-heading"
         data-split
@@ -58,7 +58,7 @@ const selectedLabel = `SELECTED WORK — ${String(selected.length).padStart(2, '
       </h2>
     </div>
     <ul class="mt-10 list-none">
-      {selected.map((project, i) => <ProjectRow project={project} index={i} />)}
+      {selected.map((project) => <ProjectRow project={project} />)}
     </ul>
     <div class="border-t border-bone/20 px-4 py-6 sm:px-6">
       <a
@@ -94,7 +94,32 @@ const selectedLabel = `SELECTED WORK — ${String(selected.length).padStart(2, '
     </a>
   </section>
 
-  <Ticker />
+  <!-- Team — the manifesto above says "a collective of people", so show them.
+       Compact cut: no bios, since the full ones live on /team. -->
+  <section class="border-t border-bone/20 py-16 sm:py-24" aria-labelledby="team-heading">
+    <div class="px-4 sm:px-6">
+      <SectionRule label="PERSONNEL" />
+      <h2
+        id="team-heading"
+        data-split
+        class="mt-6 font-display text-[clamp(2rem,6vw,5rem)] font-black uppercase leading-none tracking-tight"
+      >
+        The three of us
+      </h2>
+    </div>
+    <ul class="mt-10 grid list-none grid-cols-1 border-t border-bone/20 sm:grid-cols-3">
+      {people.map((person) => <PersonCard person={person} compact />)}
+    </ul>
+    <div class="border-t border-bone/20 px-4 py-6 sm:px-6">
+      <a
+        href="/team"
+        data-scramble
+        class="-my-2 inline-block py-3 font-mono text-sm tracking-[0.2em] text-bone hover:text-magenta active:text-magenta"
+      >
+        MEET THE TEAM →
+      </a>
+    </div>
+  </section>
 
   <ContactStrip />
 </Base>

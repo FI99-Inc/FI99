@@ -1,10 +1,16 @@
 // All motion runs through GSAP, gated behind prefers-reduced-motion.
 // When the user asks for reduced motion, nothing here runs: the inline
 // head script never adds html.motion, so no element is ever hidden.
+//
+// Every navigation is a client-side swap (see ClientRouter in Base.astro), so
+// this boots per page rather than once per module load, and tears its own
+// ScrollTriggers down first — they would otherwise pile up pointing at
+// elements that no longer exist.
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { SplitText } from 'gsap/SplitText';
 import { initScramble } from './scramble.js';
+import { initSmoothScroll, resetSmoothScroll } from './smoothscroll.js';
 
 gsap.registerPlugin(ScrollTrigger, SplitText);
 
@@ -82,18 +88,37 @@ function gradientScroll() {
   });
 }
 
-function tickers() {
-  gsap.utils.toArray('.ticker-track').forEach((track) => {
-    gsap.to(track, { xPercent: -50, duration: 22, ease: 'none', repeat: -1 });
+let mm;
+
+function boot() {
+  const root = document.documentElement;
+  // If the failsafe in Base.astro already fired, the hero is on screen and
+  // playing the intro now would yank it back out and redraw it. Everything
+  // else animates from wherever it is, so it stays.
+  const late = !root.classList.contains('motion');
+  root.classList.add('motion-ready');
+
+  initSmoothScroll();
+
+  mm = gsap.matchMedia();
+  mm.add('(prefers-reduced-motion: no-preference)', () => {
+    if (!late) heroIntro();
+    headingReveals();
+    scrollReveals();
+    gradientScroll();
+    initScramble();
   });
 }
 
-const mm = gsap.matchMedia();
-mm.add('(prefers-reduced-motion: no-preference)', () => {
-  heroIntro();
-  headingReveals();
-  scrollReveals();
-  gradientScroll();
-  tickers();
-  initScramble();
-});
+function teardown() {
+  ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
+  if (mm) {
+    mm.revert();
+    mm = null;
+  }
+}
+
+// astro:page-load fires on the initial load as well as after every swap.
+document.addEventListener('astro:page-load', boot);
+document.addEventListener('astro:before-swap', teardown);
+document.addEventListener('astro:after-swap', resetSmoothScroll);

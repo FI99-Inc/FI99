@@ -1,7 +1,12 @@
 ---
-const { project, index } = Astro.props;
+import { Image } from 'astro:assets';
 
-const num = String(index + 1).padStart(2, '0');
+// `shots` renders the screenshots under the row. The index pages stay
+// typographic; /work opts in, because that is where someone is actually
+// looking at the work rather than scanning for it.
+const { project, shots = false } = Astro.props;
+
+const hasShots = shots && project.shots && project.shots.length > 0;
 
 // The row sets every name in caps, which flattens how the names are actually
 // written. Splitting into same-case runs lets the originally-lowercase ones
@@ -24,11 +29,8 @@ const linkAttrs = isLink
 <li class="border-t border-bone/20" data-reveal>
   <Tag
     {...linkAttrs}
-    class="group grid grid-cols-[2.25rem_1fr] items-baseline gap-x-3 gap-y-2 px-4 py-6 transition-colors hover:bg-bone hover:text-void active:bg-bone active:text-void sm:grid-cols-[4rem_5fr_4fr_3fr] sm:gap-x-4 sm:px-6 sm:py-8"
+    class="group grid grid-cols-1 items-baseline gap-x-4 gap-y-2 px-4 py-6 transition-colors hover:bg-bone hover:text-void active:bg-bone active:text-void sm:grid-cols-[5fr_4fr_3fr] sm:px-6 sm:py-8"
   >
-    <span class="font-mono text-xs tracking-widest text-bone/50 group-hover:text-void/60 group-active:text-void/60">
-      {num}
-    </span>
     <h3
       class="font-display text-2xl font-extrabold uppercase leading-none tracking-tight sm:text-4xl"
     >
@@ -38,13 +40,13 @@ const linkAttrs = isLink
         )
       }
     </h3>
-    <p class="col-start-2 text-sm text-bone/70 group-hover:text-void/80 group-active:text-void/80 sm:col-start-3 sm:text-base">
+    <p class="text-sm text-bone/70 group-hover:text-void/80 group-active:text-void/80 sm:col-start-2 sm:text-base">
       {project.oneLiner}
     </p>
     <!-- flex-wrap over inline text: at 360px the meta used to break mid-token
          and strand the ↗ alone on its own line. -->
     <p
-      class="col-start-2 flex flex-wrap items-baseline gap-x-2 font-mono text-[11px] tracking-[0.15em] sm:col-start-4 sm:justify-end sm:text-right"
+      class="flex flex-wrap items-baseline gap-x-2 font-mono text-[11px] tracking-[0.15em] sm:col-start-3 sm:justify-end sm:text-right"
     >
       <span
         class:list={[
@@ -68,4 +70,27 @@ const linkAttrs = isLink
       }
     </p>
   </Tag>
+  {
+    hasShots && (
+      <div class="grid gap-3 px-4 pb-8 sm:grid-cols-2 sm:gap-4 sm:px-6">
+        {project.shots.map((shot) => (
+          <figure class="shot">
+            <div class="shot-frame border border-bone/20">
+              <Image
+                src={shot.src}
+                alt={shot.alt}
+                widths={[520, 900, 1400]}
+                sizes="(min-width: 40rem) 45vw, 92vw"
+                class="shot-img block w-full"
+                loading="lazy"
+              />
+            </div>
+            <figcaption class="mt-2 font-mono text-[10px] tracking-[0.25em] text-bone/40">
+              {shot.label}
+            </figcaption>
+          </figure>
+        ))}
+      </div>
+    )
+  }
 </li>

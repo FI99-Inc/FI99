@@ -4,7 +4,6 @@ import SectionRule from '../components/SectionRule.astro';
 import ProjectRow from '../components/ProjectRow.astro';
 import { projects } from '../data/projects.js';
 
-const count = String(projects.length).padStart(2, '0');
 ---
 
 <Base
@@ -13,7 +12,7 @@ const count = String(projects.length).padStart(2, '0');
 >
   <section class="py-12 sm:py-16" aria-labelledby="all-work-heading">
     <div class="px-4 sm:px-6">
-      <SectionRule label={`ALL WORK — ${count} ENTRIES`} />
+      <SectionRule label="ALL WORK" />
       <h2
         id="all-work-heading"
         data-split
@@ -27,7 +26,7 @@ const count = String(projects.length).padStart(2, '0');
       </p>
     </div>
     <ul class="mt-12 list-none">
-      {projects.map((project, i) => <ProjectRow project={project} index={i} />)}
+      {projects.map((project) => <ProjectRow project={project} shots />)}
     </ul>
     <div class="border-t border-bone/20 px-4 py-6 sm:px-6">
       <p class="font-mono text-[11px] tracking-[0.25em] text-bone/50">

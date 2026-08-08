@@ -2,13 +2,13 @@
 import Base from '../layouts/Base.astro';
 import Multiline99 from '../components/Multiline99.astro';
 import SectionRule from '../components/SectionRule.astro';
-import Ticker from '../components/Ticker.astro';
 import ContactStrip from '../components/ContactStrip.astro';
 import ProjectRow from '../components/ProjectRow.astro';
+import PersonCard from '../components/PersonCard.astro';
 import { projects } from '../data/projects.js';
+import { people } from '../data/people.js';
 
 const selected = projects.slice(0, 3);
-const selectedLabel = `SELECTED WORK — ${String(selected.length).padStart(2, '0')}/${String(projects.length).padStart(2, '0')}`;
 ---
 
 <Base
@@ -34,21 +34,21 @@ const selectedLabel = `SELECTED WORK — ${String(selected.length).padStart(2, '
         </p>
         <!-- TODO(fi99): [SUBLINE] — confirm this line, add a location if we want one -->
         <p class="hero-snap mt-4 font-mono text-xs tracking-[0.2em] text-bone/60 sm:text-sm">
-          AN EXPERIMENTAL STUDIO. WEBSITES, APPS, SOFTWARE.
+          AN EXPERIMENTAL STUDIO.
         </p>
       </div>
     </div>
-    <!-- 0.25em tracking pushes this label past 288px on a 320px screen. -->
-    <div class="hero-snap mt-6 flex items-center justify-between gap-6 font-mono text-[11px] tracking-[0.16em] text-bone/50 sm:mt-10 sm:tracking-[0.25em]">
-      <span>[ FI99 — EXPERIMENTAL STUDIO ]</span>
-      <span aria-hidden="true" class="hidden sm:inline">SCROLL ↓</span>
+    <!-- The scroll cue is all that is left in this row, so it can show on
+         phones too — and it keeps the hero anchored to the bottom there. -->
+    <div class="hero-snap mt-6 flex items-center justify-end font-mono text-[11px] tracking-[0.16em] text-bone/50 sm:mt-10 sm:tracking-[0.25em]">
+      <span aria-hidden="true">SCROLL ↓</span>
     </div>
   </section>
 
   <!-- Selected work -->
   <section class="px-0 py-16 sm:py-24" aria-labelledby="work-heading">
     <div class="px-4 sm:px-6">
-      <SectionRule label={selectedLabel} />
+      <SectionRule label="SELECTED WORK" />
       <h2
         id="work-heading"
         data-split
@@ -58,13 +58,13 @@ const selectedLabel = `SELECTED WORK — ${String(selected.length).padStart(2, '
       </h2>
     </div>
     <ul class="mt-10 list-none">
-      {selected.map((project, i) => <ProjectRow project={project} index={i} />)}
+      {selected.map((project) => <ProjectRow project={project} />)}
     </ul>
     <div class="border-t border-bone/20 px-4 py-6 sm:px-6">
       <a
         href="/work"
         data-scramble
-        class="-my-2 inline-block py-3 font-mono text-sm tracking-[0.2em] text-bone hover:text-magenta"
+        class="-my-2 inline-block py-3 font-mono text-sm tracking-[0.2em] text-bone hover:text-magenta active:text-magenta"
       >
         ALL WORK →
       </a>
@@ -88,13 +88,38 @@ const selectedLabel = `SELECTED WORK — ${String(selected.length).padStart(2, '
       href="/about"
       data-scramble
       data-reveal
-      class="mt-6 inline-block py-3 font-mono text-sm tracking-[0.2em] text-bone hover:text-magenta"
+      class="mt-6 inline-block py-3 font-mono text-sm tracking-[0.2em] text-bone hover:text-magenta active:text-magenta"
     >
       READ THE REST →
     </a>
   </section>
 
-  <Ticker />
+  <!-- Team — the manifesto above says "a collective of people", so show them.
+       Compact cut: no bios, since the full ones live on /team. -->
+  <section class="border-t border-bone/20 py-16 sm:py-24" aria-labelledby="team-heading">
+    <div class="px-4 sm:px-6">
+      <SectionRule label="PERSONNEL" />
+      <h2
+        id="team-heading"
+        data-split
+        class="mt-6 font-display text-[clamp(2rem,6vw,5rem)] font-black uppercase leading-none tracking-tight"
+      >
+        The three of us
+      </h2>
+    </div>
+    <ul class="mt-10 grid list-none grid-cols-1 border-t border-bone/20 sm:grid-cols-3">
+      {people.map((person) => <PersonCard person={person} compact />)}
+    </ul>
+    <div class="border-t border-bone/20 px-4 py-6 sm:px-6">
+      <a
+        href="/team"
+        data-scramble
+        class="-my-2 inline-block py-3 font-mono text-sm tracking-[0.2em] text-bone hover:text-magenta active:text-magenta"
+      >
+        MEET THE TEAM →
+      </a>
+    </div>
+  </section>
 
   <ContactStrip />
 </Base>

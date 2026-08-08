@@ -29,11 +29,36 @@ function scramble(el, original) {
 }
 
 export function initScramble() {
+  // Touch has no hover, so on coarse pointers the decode fires on tap and
+  // once more as each label first scrolls into view. Without this the effect
+  // simply never runs on a phone.
+  const coarse = !window.matchMedia('(pointer: fine)').matches;
+
+  const onView =
+    coarse && 'IntersectionObserver' in window
+      ? new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              if (!entry.isIntersecting) return;
+              onView.unobserve(entry.target);
+              entry.target._scrambleRun();
+            });
+          },
+          { threshold: 0.6 }
+        )
+      : null;
+
   document.querySelectorAll('[data-scramble]').forEach((el) => {
     const original = el.textContent.trim();
     el.textContent = original;
     const run = () => scramble(el, original);
     el.addEventListener('mouseenter', run);
     el.addEventListener('focus', run);
+
+    if (coarse) {
+      el.addEventListener('pointerdown', run);
+      el._scrambleRun = run;
+      if (onView) onView.observe(el);
+    }
   });
 }

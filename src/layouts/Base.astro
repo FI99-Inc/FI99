@@ -1,5 +1,6 @@
 ---
 import '../styles/global.css';
+import { ClientRouter } from 'astro:transitions';
 import Multiline99 from '../components/Multiline99.astro';
 import Starfield from '../components/Starfield.astro';
 import displayFontUrl from '@fontsource-variable/unbounded/files/unbounded-latin-wght-normal.woff2?url';
@@ -14,6 +15,7 @@ const ogImage = new URL('/og.png', Astro.site);
 
 const nav = [
   { href: '/work', label: 'WORK' },
+  { href: '/team', label: 'TEAM' },
   { href: '/about', label: 'ABOUT' },
   { href: '/notes', label: 'NOTES' },
 ];
@@ -47,16 +49,65 @@ const year = new Date().getFullYear();
     <meta property="og:image:height" content="630" />
     <meta name="twitter:card" content="summary_large_image" />
     <script is:inline>
-      if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-        document.documentElement.classList.add('motion');
-      }
+      // html.motion hides the hero and every [data-reveal] until GSAP reveals
+      // them, so a motion bundle that never boots — script error, blocked or
+      // slow network — would leave the page permanently blank. The hidden
+      // state expires on its own; motion.js stamps motion-ready to cancel it.
+      (function () {
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        var root = document.documentElement;
+        function arm() {
+          root.classList.add('motion');
+          window.setTimeout(function () {
+            if (!root.classList.contains('motion-ready')) {
+              root.classList.remove('motion');
+            }
+          }, 2000);
+        }
+        arm();
+        // A client-side navigation copies the incoming document's <html>
+        // class list over this one, which drops `motion`. Re-arm per swap.
+        document.addEventListener('astro:after-swap', function () {
+          root.classList.remove('motion-ready');
+          arm();
+        });
+      })();
     </script>
+    <ClientRouter />
     <slot name="head" />
   </head>
   <!-- No background on body: html carries the void color, and painting it
        here again would sit on top of the z-index -1 starfield. -->
   <body class="font-sans text-bone">
     <Starfield />
+
+    <!-- Duotone ramp for the portraits, defined once here because the cards
+         appear on more than one page and three copies of the same filter id
+         would collide. Luminance first, then a three-stop table landing
+         shadows on void and highlights on bone. The point is not decoration:
+         the source photos are a studio headshot, a phone snapshot taken at
+         night and a bright seaside portrait, and putting all three through one
+         ramp is what makes them read as one set rather than three strangers.
+         Deliberately near-neutral — a saturated version reads as a photo
+         filter and drowns the magenta school label beneath it. -->
+    <svg width="0" height="0" aria-hidden="true" focusable="false" class="absolute">
+      <defs>
+        <filter id="fi-duotone" color-interpolation-filters="sRGB">
+          <feColorMatrix
+            type="matrix"
+            values="0.2126 0.7152 0.0722 0 0
+                    0.2126 0.7152 0.0722 0 0
+                    0.2126 0.7152 0.0722 0 0
+                    0      0      0      1 0"
+          />
+          <feComponentTransfer>
+            <feFuncR type="table" tableValues="0.031 0.34 0.949" />
+            <feFuncG type="table" tableValues="0.031 0.32 0.937" />
+            <feFuncB type="table" tableValues="0.062 0.44 0.914" />
+          </feComponentTransfer>
+        </filter>
+      </defs>
+    </svg>
     <a
       href="#main"
       class="absolute left-4 top-4 z-50 -translate-y-24 bg-magenta px-4 py-2 font-mono text-xs uppercase tracking-widest text-void transition-transform focus:translate-y-0"
@@ -68,11 +119,23 @@ const year = new Date().getFullYear();
       <div class="flex items-stretch justify-between">
         <a
           href="/"
-          class="flex items-center gap-[0.12em] border-r border-bone/20 px-4 py-3 font-display text-lg font-black tracking-tight sm:px-6"
+          class="logo-lockup relative flex items-center gap-[0.12em] border-r border-bone/20 px-4 py-3 font-display text-lg font-black tracking-tight sm:px-6"
           aria-label="FI99 home"
         >
-          <span class="grad-text grad-scroll">FI</span>
-          <Multiline99 strokeWidth={6} class="h-[1.05em] w-auto" />
+          <!-- Atomic-age orbits behind the mark. It comes first in the DOM so
+               the two positioned children after it paint on top. -->
+          <svg
+            class="logo-orbits"
+            viewBox="-50 -30 100 60"
+            fill="none"
+            aria-hidden="true"
+            focusable="false"
+          >
+            <ellipse cx="0" cy="0" rx="44" ry="15" transform="rotate(-32)" stroke="var(--color-magenta)" />
+            <ellipse cx="0" cy="0" rx="44" ry="15" transform="rotate(32)" stroke="var(--color-volt)" />
+          </svg>
+          <span class="relative grad-text grad-scroll">FI</span>
+          <Multiline99 strokeWidth={6} class="relative h-[1.05em] w-auto" />
         </a>
         <nav aria-label="Main">
           <ul class="flex h-full items-stretch">
@@ -82,7 +145,12 @@ const year = new Date().getFullYear();
                   <a
                     href={item.href}
                     data-scramble
-                    class="flex items-center px-4 py-3 font-mono text-xs tracking-[0.2em] hover:bg-bone hover:text-void sm:px-6"
+                    /* A fourth item pushes the header past 320px at the old
+                       spacing — the whole row needed 385px, which silently
+                       forced the layout viewport wider on small phones. Tighter
+                       padding and tracking below sm buy it back; the row keeps
+                       its 52px height, so tap targets are untouched. */
+                    class="flex items-center px-2.5 py-3 font-mono text-[11px] tracking-[0.08em] hover:bg-bone hover:text-void active:bg-bone active:text-void sm:px-6 sm:text-xs sm:tracking-[0.2em]"
                   >
                     {item.label}
                   </a>
@@ -103,21 +171,21 @@ const year = new Date().getFullYear();
         <p class="border-b border-bone/20 px-4 py-4 tracking-widest text-bone/60 sm:border-b-0 sm:border-r sm:px-6">
           © {year} FI99 — WE CREATE THINGS.
         </p>
-        <!-- TODO(fi99): [SOCIALS] — replace these placeholder links, or delete this list entirely -->
-        <!-- py-3/-my-2 grows each hit box past the 44px touch minimum without
-             changing the strip's height. "X" was an 8x16px target. -->
-        <ul class="flex min-h-12 items-stretch gap-5 border-b border-bone/20 px-4 sm:justify-center sm:gap-6 sm:border-b-0 sm:border-r sm:px-6">
-          <li class="flex"><a href="#" data-scramble class="flex items-center px-1 tracking-widest hover:text-magenta">GITHUB</a></li>
-          <li class="flex"><a href="#" data-scramble class="flex items-center px-1 tracking-widest hover:text-magenta">INSTAGRAM</a></li>
-          <li class="flex"><a href="#" data-scramble class="flex items-center px-1 tracking-widest hover:text-magenta">X</a></li>
-        </ul>
+        <!-- TODO(fi99): [SOCIALS] — no accounts exist yet. Restore the link
+             list here once they do; until then this states the fact rather
+             than shipping three anchors that go nowhere. -->
+        <p class="flex min-h-12 items-center border-b border-bone/20 px-4 tracking-widest text-bone/40 sm:justify-center sm:border-b-0 sm:border-r sm:px-6">
+          [ SOCIALS — SOON ]
+        </p>
         <p class="flex items-center px-4 py-4 tracking-widest text-bone/60 sm:justify-end sm:px-6">
           FI99.CA
         </p>
       </div>
     </footer>
 
-    <div class="fi-cursor" aria-hidden="true"></div>
+    <!-- Persisted too: a swapped-in replacement would drop the GSAP tweens
+         driving it and snap the crosshair back to the top-left corner. -->
+    <div class="fi-cursor" aria-hidden="true" transition:persist></div>
 
     <script>
       import '../scripts/motion.js';

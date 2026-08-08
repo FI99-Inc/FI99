@@ -34,7 +34,11 @@ const stars = Array.from({ length: STAR_COUNT }, () => ({
 }));
 ---
 
-<div class="starfield" aria-hidden="true">
+{/* transition:persist has to sit on this element rather than on <Starfield />
+    at the call site: this component ignores Astro.props, so the directive
+    would never reach the root node and the sky would be rebuilt — and all
+    three twinkle animations restarted in lockstep — on every navigation. */}
+<div class="starfield" aria-hidden="true" transition:persist>
   <svg width="100%" height="100%">
     {
       stars.map((s) => (

@@ -27,16 +27,13 @@
 }
 
 @layer base {
+  /* No scroll-behavior here on purpose. Lenis owns smooth scrolling now, and
+     a native smooth behaviour fights it for control of the same scroll
+     position. When Lenis is absent — reduced motion, or no JS — instant jumps
+     are the correct fallback anyway. */
   html {
     background-color: var(--color-void);
     color: var(--color-bone);
-    scroll-behavior: smooth;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    html {
-      scroll-behavior: auto;
-    }
   }
 
   body {
@@ -136,6 +133,86 @@
 .crt-glow {
   filter: drop-shadow(0 0 6px rgb(255 31 143 / 0.55))
     drop-shadow(0 0 22px rgb(139 43 255 / 0.35));
+}
+
+/* ---- Project screenshots ----
+   The two products have opposite grounds — Krine is near-black, PlotON is
+   cream — so dropped in raw one of them always glares off a #060606 page.
+   Holding both dimmed and desaturated at rest lands them in the same register
+   and lets the page stay the brightest thing on it; pointing at one brings it
+   up to full colour, which reads as the screen switching on.
+
+   Lighter than the .scanlines used on solid panels: at 0.28 every 3px the
+   ruling eats the interface detail these shots exist to show. */
+
+.shot-frame {
+  position: relative;
+  overflow: hidden;
+}
+
+.shot-frame::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent 0px,
+    transparent 3px,
+    rgb(0 0 0 / 0.16) 3px,
+    rgb(0 0 0 / 0.16) 4px
+  );
+}
+
+/* Gated on hover: with no pointer there is no way to discover the reveal, so
+   touch devices get the screenshots at full strength immediately. */
+@media (hover: hover) {
+  .shot-img {
+    /* Enough to stop the cream ground glaring, not so much that the interface
+       detail these shots exist to show stops being legible at rest. */
+    filter: saturate(0.72) brightness(0.83);
+    transition: filter 0.45s ease;
+  }
+
+  .shot-frame::after {
+    opacity: 1;
+    transition: opacity 0.45s ease;
+  }
+
+  .shot:hover .shot-img,
+  .shot:focus-within .shot-img {
+    filter: none;
+  }
+
+  .shot:hover .shot-frame::after,
+  .shot:focus-within .shot-frame::after {
+    opacity: 0;
+  }
+}
+
+/* ---- Founder portraits ----
+   Duotone is doing real work here, not decoration: the source photos are a
+   studio headshot, a phone snapshot taken at night, and an empty slot. Mapping
+   them through one ramp (see #fi-duotone in about.astro) makes them a set.
+   It stays on by default — that unified read is the design — and lifts to the
+   real photograph on hover, which touch devices never see and do not need. */
+
+.portrait-frame {
+  overflow: hidden;
+}
+
+.portrait-img {
+  filter: url(#fi-duotone) contrast(1.05);
+}
+
+@media (hover: hover) {
+  .portrait-img {
+    transition: filter 0.5s ease;
+  }
+
+  .portrait-card:hover .portrait-img {
+    filter: none;
+  }
 }
 
 /* ---- Starfield ----
@@ -247,6 +324,35 @@ html.motion .ml99-draw .ml99-path {
   .hero-99 {
     width: calc(var(--fi) * 1.11);
     height: auto;
+  }
+}
+
+/* ---- Header lockup orbits ----
+   Two crossed ellipses behind FI99, atomic-emblem style. Sized in em so they
+   track the wordmark's font-size, and centered on the lockup's padding box —
+   the horizontal padding is symmetric, so that is also the mark's center. At
+   4.2em wide the rotated ellipses span ~40px inside a ~52px header row, which
+   keeps them clear of the borders above and below. */
+
+.logo-orbits {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 4.2em;
+  height: 2.52em;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  opacity: 0.5;
+  transition: opacity 0.3s ease;
+}
+
+.logo-orbits ellipse {
+  stroke-width: 1.6;
+}
+
+@media (hover: hover) {
+  .logo-lockup:hover .logo-orbits {
+    opacity: 0.9;
   }
 }
 

@@ -347,9 +347,16 @@ In `src/styles/global.css`, replace lines 298–321 in full — the `---- Founde
   filter: url(#fi-duotone) contrast(1.05);
 }
 
+/* The explicit size is load-bearing, not belt-and-braces. inset alone does
+   not size a replaced element: Tailwind's preflight sets height:auto on img,
+   which wins, and the box then resolves from the photograph's own aspect
+   ratio. Omar's source is 1200x1600, so his layer overflowed its square frame
+   by 123px and object-cover never engaged — his face jumped on hover. */
 .portrait-color {
   position: absolute;
   inset: 0;
+  width: 100%;
+  height: 100%;
   opacity: var(--portrait-color, 0);
   transition: opacity 0.45s ease;
 }

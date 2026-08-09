@@ -20,7 +20,7 @@ lifts to full colour, one at a time, cross-faded.
 
 | Question | Decision |
 | --- | --- |
-| Scope | Any device where `(hover: hover)` does not match — the exact complement of the existing CSS rule. Both pages, single-column or the 3-up tablet layout. Mouse behaviour is unchanged. |
+| Scope | Any device where `(hover: hover)` does not match, and only while the `sm:` breakpoint has the cards stacked single-column. Both pages. In the 3-up layout (≥640px, no hover — a tablet, or a phone rotated to landscape) the three frames are grid siblings of identical size and move together, so no scroll position makes one dominate; the driver stays out and those devices stay fully duotone. Mouse behaviour is unchanged. |
 | Winner rule | Largest visible area of the **portrait frame**, not the card. |
 | Feel | Winner-takes-all, cross-faded over 0.45s, with a visibility floor so nobody is lit at the edges. |
 
@@ -91,11 +91,24 @@ already past 400 lines.
 
 **Gate.** Return `null` immediately if `(hover: hover)` matches. This is the
 exact complement of the CSS rule, so hover and scroll can never both drive the
-same card.
+same card. A second gate returns `null` at `(min-width: 40rem)`, the `sm:`
+breakpoint where `sm:grid-cols-3` puts the three frames side by side as grid
+siblings of identical size. Side by side, no scroll position makes one of them
+the one you are looking at, so nothing there can earn colour — the driver
+stays out and that layout stays fully duotone, exactly as it was before this
+feature.
 
 **Measurement cache.** Each frame's document offset and size are measured once
-and refreshed by a `ResizeObserver` on the frames. That covers image load,
-orientation change, font swap, and reflow.
+and refreshed by a `ResizeObserver` on the frames and on `document.body`.
+Watching the frames covers image load, orientation change, and their own
+resize. Watching the body catches reflow that moves the cards without ever
+resizing them — the display face ships `font-display: swap`, and the
+heading above the first card re-wrapping when it lands walks every frame down
+the page without triggering a frame-level ResizeObserver. `document.fonts.ready`
+triggers one more re-measure for the case where the swap happens to leave the
+document height unchanged; it is guarded by a `stopped` flag so a re-measure
+firing after a client-side navigation has already torn the driver down is a
+no-op rather than a write to a detached page.
 
 Measurement walks the `offsetTop` / `offsetParent` chain rather than reading
 `getBoundingClientRect()`. `html.motion [data-reveal]` parks every card at
@@ -117,13 +130,22 @@ frames happen to be the same width, so visible height alone would rank them
 identically — but the page is only ever one grid change away from that not
 holding, and the comparison should say what it means.
 
-No `getBoundingClientRect()` in the scroll path. This matters because
-`starTrails()` writes to `field.style` on the same ticker; a read after that
-write would force a synchronous layout on every scrolled frame.
+No `getBoundingClientRect()` in the scroll path. This matters regardless of
+callback ordering: ticker listener 0 is GSAP's own `Timeline.updateRoot`,
+added the moment `gsap-core` loads, so it runs ahead of every other ticker
+callback and writes that frame's tween styles first. A rect read on the
+ticker after that write would force a synchronous layout on every scrolled
+frame, whatever position this driver's own callback happened to occupy in the
+list.
 
-**Idle cost.** The ticker callback early-outs when `scrollY` has not changed
-since the last frame, matching the settle-and-stop contract the rest of the file
-keeps.
+**Driver.** A passive `scroll` listener, not `gsap.ticker`. GSAP parks its
+rAF loop only while it holds fewer than two listeners, and on a
+reduced-motion phone nothing else in this file registers a ticker callback —
+so putting this driver on the ticker would give the main thread a reason to
+wake every frame for the entire session, for exactly the people who asked for
+less motion. The listener early-outs when `scrollY` has not changed since the
+last call, and scroll does not fire at all while the page is at rest, so an
+idle page costs nothing either way.
 
 **Winner.** Largest visible area wins, and must clear **40% of its own height**
 on screen to win at all. Below that threshold there is no winner and every
@@ -137,8 +159,9 @@ other at the handover.
 **Writes.** `--portrait-color` is set only when the winner changes, not per
 frame.
 
-**Teardown.** The stop removes the ticker callback, disconnects the
-`ResizeObserver`, and clears `--portrait-color` from every card.
+**Teardown.** The stop sets the `stopped` flag, removes the scroll listener,
+disconnects the `ResizeObserver`, and clears `--portrait-color` from every
+card.
 
 ### 4. Reduced motion
 

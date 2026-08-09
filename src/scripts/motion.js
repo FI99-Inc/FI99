@@ -12,6 +12,7 @@ import { SplitText } from 'gsap/SplitText';
 import { initScramble } from './scramble.js';
 import { initSmoothScroll, resetSmoothScroll } from './smoothscroll.js';
 import { initWordCycle } from './wordcycle.js';
+import { initPortraitFocus } from './portrait-focus.js';
 
 gsap.registerPlugin(ScrollTrigger, SplitText);
 
@@ -381,6 +382,7 @@ function clickRipples() {
 }
 
 let mm;
+let stopPortraits;
 
 function boot() {
   const root = document.documentElement;
@@ -391,6 +393,13 @@ function boot() {
   root.classList.add('motion-ready');
 
   initSmoothScroll();
+
+  // Deliberately outside the reduced-motion gate below, alone in this file.
+  // Which portrait is in colour is information rather than decoration, and
+  // gating it would mean a touch user who asked for reduced motion never
+  // sees a colour photograph at all — which is the whole complaint this
+  // answers. The fade itself is dropped in CSS under that preference.
+  stopPortraits = initPortraitFocus();
 
   mm = gsap.matchMedia();
   mm.add('(prefers-reduced-motion: no-preference)', () => {
@@ -407,6 +416,10 @@ function boot() {
 
 function teardown() {
   ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
+  if (stopPortraits) {
+    stopPortraits();
+    stopPortraits = null;
+  }
   if (mm) {
     mm.revert();
     mm = null;

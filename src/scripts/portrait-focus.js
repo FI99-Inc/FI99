@@ -1,3 +1,5 @@
+import { gsap } from 'gsap';
+
 // Which founder portrait is in colour, on devices that cannot hover.
 //
 // The portraits are duotone by default and lift to the real photograph on
@@ -60,4 +62,81 @@ export function pickFocus(boxes, scrollY, viewportHeight, current = -1) {
   if (held > 0 && best !== current && bestArea < held * LEAD_MARGIN) return current;
 
   return best;
+}
+
+// getBoundingClientRect() is the wrong tool here, and quietly so:
+// html.motion [data-reveal] parks every card at translateY(28px) until GSAP
+// reveals it, and a ResizeObserver never fires on a transform change — so a
+// rect cached for a card below the fold would stay 28px wrong forever.
+// offsetTop is layout, not paint, and ignores transforms entirely.
+function documentTop(el) {
+  let y = 0;
+  let node = el;
+  while (node) {
+    y += node.offsetTop;
+    node = node.offsetParent;
+  }
+  return y;
+}
+
+export function initPortraitFocus() {
+  // The exact complement of the (hover: hover) rule in global.css. Written as
+  // one negated query rather than a second guess at what a touch device is,
+  // so the two can never both drive a card and never both go quiet.
+  if (window.matchMedia('(hover: hover)').matches) return null;
+
+  const cards = Array.from(document.querySelectorAll('.portrait-card')).filter((card) =>
+    card.querySelector('.portrait-color')
+  );
+  if (!cards.length) return null;
+
+  const frames = cards.map((card) => card.querySelector('.portrait-frame'));
+  let boxes = [];
+  let current = -1;
+  let lastY = null;
+
+  // Measured on layout changes only. The alternative — reading rects on the
+  // ticker — would land after starTrails() has written to the starfield on
+  // that same ticker, forcing a synchronous layout on every scrolled frame.
+  const measure = () => {
+    boxes = frames.map((frame) => ({
+      top: documentTop(frame),
+      height: frame.offsetHeight,
+      width: frame.offsetWidth,
+    }));
+    // The geometry moved, so whatever the last scroll position decided about
+    // it is stale. Clearing this forces the next tick to recompute.
+    lastY = null;
+  };
+
+  const paint = (next) => {
+    if (next === current) return;
+    if (current >= 0) cards[current].style.removeProperty('--portrait-color');
+    if (next >= 0) cards[next].style.setProperty('--portrait-color', '1');
+    current = next;
+  };
+
+  const follow = () => {
+    const y = window.scrollY;
+    // A page nobody is scrolling costs one comparison per frame and no reads
+    // at all — the same settle-and-stop contract the rest of motion.js keeps.
+    if (y === lastY) return;
+    lastY = y;
+    paint(pickFocus(boxes, y, window.innerHeight, current));
+  };
+
+  // Catches the portraits loading, the fonts swapping, an orientation change
+  // and the section reflowing, all of which move the frames.
+  const observer = new ResizeObserver(measure);
+  frames.forEach((frame) => observer.observe(frame));
+
+  measure();
+  follow();
+  gsap.ticker.add(follow);
+
+  return () => {
+    gsap.ticker.remove(follow);
+    observer.disconnect();
+    cards.forEach((card) => card.style.removeProperty('--portrait-color'));
+  };
 }

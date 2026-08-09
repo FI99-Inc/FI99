@@ -118,7 +118,10 @@
   --grad-scroll: 0;
   --grad-x: 0.5;
   --grad-y: 0.5;
-  background-image: linear-gradient(
+  /* The sweep and its position are named rather than inlined so the ripple
+     rule below can re-list them as the bottom background layer without
+     restating any of this. Two copies of these stops would drift apart. */
+  --brand-sweep: linear-gradient(
     135deg,
     var(--color-magenta),
     var(--color-violet),
@@ -127,9 +130,68 @@
     var(--color-violet),
     var(--color-volt)
   );
+  --sweep-x: calc((var(--grad-scroll) * 88 + 6 + (var(--grad-x) - 0.5) * 12) * 1%);
+  --sweep-y: calc((var(--grad-scroll) * 88 + 6 + (var(--grad-y) - 0.5) * 12) * 1%);
+  background-image: var(--brand-sweep);
   background-size: 300% 300%;
-  background-position: calc((var(--grad-scroll) * 88 + 6 + (var(--grad-x) - 0.5) * 12) * 1%)
-    calc((var(--grad-scroll) * 88 + 6 + (var(--grad-y) - 0.5) * 12) * 1%);
+  background-position: var(--sweep-x) var(--sweep-y);
+}
+
+/* ---- Click ripple ----
+   The glyph is the pond. Every layer of a background-clip:text element is
+   clipped to the letterforms, so a ring gradient laid over the sweep travels
+   across the strokes and dies at their edges — including across the counters
+   of the F, which an overlay element could never follow.
+
+   Three slots, so overlapping clicks read as separate wavefronts crossing
+   rather than one ring restarting. They are spelled out because CSS cannot
+   build a property name from an index. Each is only a *shape*: motion.js
+   points --ripple-N at one while that ripple is alive and drops it back to
+   `none` afterwards. A permanently-listed transparent layer would instead
+   repaint alongside the sweep on every scrolled frame, for nothing.
+
+   Two crests — a bright leading edge with a fainter one trailing 22px back —
+   both fading through --rNa as the wave loses energy. max() holds the inner
+   stops at 0 during the first frames, while the ring is still narrower than
+   its own crest spacing and those offsets would otherwise go negative.
+
+   Every ripple variable is a bare number multiplied by 1px here: GSAP tweens
+   unitless custom properties far more predictably than length tokens. */
+@media (prefers-reduced-motion: no-preference) {
+  .grad-scroll[data-ripple] {
+    --ripple-ring-0: radial-gradient(
+      circle at calc(var(--r0x, 0) * 1px) calc(var(--r0y, 0) * 1px),
+      transparent max(0px, calc((var(--r0r, 0) - 38) * 1px)),
+      rgb(242 239 233 / calc(0.14 * var(--r0a, 0))) max(0px, calc((var(--r0r, 0) - 28) * 1px)),
+      transparent max(0px, calc((var(--r0r, 0) - 19) * 1px)),
+      rgb(242 239 233 / calc(0.52 * var(--r0a, 0))) max(0px, calc((var(--r0r, 0) - 6) * 1px)),
+      transparent calc(var(--r0r, 0) * 1px)
+    );
+    --ripple-ring-1: radial-gradient(
+      circle at calc(var(--r1x, 0) * 1px) calc(var(--r1y, 0) * 1px),
+      transparent max(0px, calc((var(--r1r, 0) - 38) * 1px)),
+      rgb(242 239 233 / calc(0.14 * var(--r1a, 0))) max(0px, calc((var(--r1r, 0) - 28) * 1px)),
+      transparent max(0px, calc((var(--r1r, 0) - 19) * 1px)),
+      rgb(242 239 233 / calc(0.52 * var(--r1a, 0))) max(0px, calc((var(--r1r, 0) - 6) * 1px)),
+      transparent calc(var(--r1r, 0) * 1px)
+    );
+    --ripple-ring-2: radial-gradient(
+      circle at calc(var(--r2x, 0) * 1px) calc(var(--r2y, 0) * 1px),
+      transparent max(0px, calc((var(--r2r, 0) - 38) * 1px)),
+      rgb(242 239 233 / calc(0.14 * var(--r2a, 0))) max(0px, calc((var(--r2r, 0) - 28) * 1px)),
+      transparent max(0px, calc((var(--r2r, 0) - 19) * 1px)),
+      rgb(242 239 233 / calc(0.52 * var(--r2a, 0))) max(0px, calc((var(--r2r, 0) - 6) * 1px)),
+      transparent calc(var(--r2r, 0) * 1px)
+    );
+    background-image: var(--ripple-0, none), var(--ripple-1, none),
+      var(--ripple-2, none), var(--brand-sweep);
+    /* The sweep is the last entry in every list, and keeps the oversized
+       canvas and repeat it has always had. The rings sit at natural size
+       over the element, unrepeated. */
+    background-size: 100% 100%, 100% 100%, 100% 100%, 300% 300%;
+    background-position: 0 0, 0 0, 0 0, var(--sweep-x) var(--sweep-y);
+    background-repeat: no-repeat, no-repeat, no-repeat, repeat;
+  }
 }
 
 .grad-rule {
@@ -393,6 +455,39 @@ html.motion .ml99-draw .ml99-path {
   }
 }
 
+/* ---- Hero word cycle ----
+   The last word of "We create things." is swapped on a loop by
+   scripts/wordcycle.js, which fills .hero-word with one mask per character.
+   Everything here is layout only: with no JS, or under reduced motion, the
+   markup's plain "things." inherits these rules and looks untouched. */
+
+.hero-word {
+  display: inline-block;
+  /* The word ends the line, so wrapping is allowed *before* it and never
+     inside it — a word breaking across two lines mid-swap would take the
+     hero's whole rhythm with it. */
+  white-space: nowrap;
+}
+
+/* clip-path rather than overflow:hidden, and that is not a preference. An
+   inline-block whose overflow is anything but visible takes its baseline from
+   its bottom margin edge instead of from the text inside it, which lifted the
+   whole word about a quarter em clear of "We create". Clipping leaves the
+   baseline alone, so the rotator sits on the same line as the words before it.
+
+   The top edge is clipped flush; the bottom is let out far enough for the
+   descenders — the g in "things", the p in "apps" — to hang past it. That
+   slack is the reason wordcycle.js flies its characters well past 100%: a
+   character travelling only its own height would still show in it. */
+.hero-word .wc-slot {
+  display: inline-block;
+  clip-path: inset(0 -0.06em -0.24em -0.06em);
+}
+
+.hero-word .wc-char {
+  display: inline-block;
+}
+
 /* ---- Header lockup orbits ----
    Two crossed ellipses behind FI99, atomic-emblem style. Sized in em so they
    track the wordmark's font-size, and centered on the lockup's padding box —
@@ -474,6 +569,138 @@ html.cursor-on .fi-cursor {
 .fi-cursor.is-active::before,
 .fi-cursor.is-active::after {
   background: var(--color-magenta);
+}
+
+/* ---- Contact arrows ----
+   Four runs converging on the mailto button, marching inward. The address is
+   the one thing on the site we actually want clicked, and the bone panel it
+   sits on has no other accent — pointing at it is cheaper and louder than
+   making the button itself bigger.
+
+   Every arrow carries two custom properties from the markup: --d is the
+   direction it travels (+1 down or right, -1 up or left) and --i is its place
+   in the wave. The delay is negative, so the crest is already crossing the rig
+   on the first painted frame rather than starting from a dead row. */
+
+.arrow-rig {
+  display: inline-grid;
+  grid-template-columns: auto auto auto;
+  align-items: center;
+  justify-items: center;
+  gap: 0.4rem 0.7rem;
+}
+
+.arrow-run-down {
+  grid-area: 1 / 2;
+}
+.arrow-run-l {
+  grid-area: 2 / 1;
+}
+.arrow-target {
+  grid-area: 2 / 2;
+}
+.arrow-run-r {
+  grid-area: 2 / 3;
+}
+.arrow-run-up {
+  grid-area: 3 / 2;
+}
+
+/* Heavier than the mono default: these sit under a 7rem black display heading,
+   and hairline arrows next to it read as a rendering artifact. */
+.arrow-run {
+  display: flex;
+  font-family: var(--font-mono);
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1;
+}
+
+/* The horizontal runs are tight enough to read as one stream flowing into the
+   button; the vertical rows spread out to span its width instead. */
+.arrow-run-l,
+.arrow-run-r {
+  gap: 0.1rem;
+}
+
+.arrow-run-down,
+.arrow-run-up {
+  gap: 1rem;
+}
+
+@media (width >= 40rem) {
+  .arrow-run {
+    font-size: 1.5rem;
+  }
+
+  .arrow-run-down,
+  .arrow-run-up {
+    gap: 2.4rem;
+  }
+}
+
+/* Rest state, which is also the reduced-motion state: the arrows still point,
+   they just stop moving. */
+.arw {
+  display: block;
+  opacity: 0.9;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .arrow-run-l .arw,
+  .arrow-run-r .arw {
+    animation: arw-x 1.5s ease-in-out infinite;
+    animation-delay: calc(var(--i, 0) * -0.17s);
+  }
+
+  .arrow-run-down .arw,
+  .arrow-run-up .arw {
+    animation: arw-y 1.5s ease-in-out infinite;
+    animation-delay: calc(var(--i, 0) * -0.17s);
+  }
+}
+
+/* Faded at both ends of the travel, brightest in the middle: an arrow that
+   held full strength as it landed would read as a row of blinking lights
+   rather than something moving through. */
+@keyframes arw-x {
+  0% {
+    opacity: 0.1;
+    transform: translateX(calc(var(--d) * -0.6em));
+  }
+  45% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.1;
+    transform: translateX(calc(var(--d) * 0.6em));
+  }
+}
+
+@keyframes arw-y {
+  0% {
+    opacity: 0.1;
+    transform: translateY(calc(var(--d) * -0.5em));
+  }
+  45% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.1;
+    transform: translateY(calc(var(--d) * 0.5em));
+  }
+}
+
+/* The button alone is most of a 320px panel — four more arrows on each flank
+   would force the page into horizontal scroll. The rows above and below still
+   point at it, so nothing about the idea is lost. Written as a media query
+   rather than Tailwind's `hidden`, since that utility is layered and would
+   lose to .arrow-run's display above. */
+@media (width < 40rem) {
+  .arrow-run-l,
+  .arrow-run-r {
+    display: none;
+  }
 }
 
 /* ---- 404 glitch ---- */

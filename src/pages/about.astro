@@ -6,16 +6,15 @@ import { people } from '../data/people.js';
 
 // The concession is the whole argument, so both halves of it are set as
 // display type rather than body copy. The rest steps down to reading size.
-const count = String(principles.length).padStart(2, '0');
 ---
 
 <Base
   title="About — FI99"
-  description="You are early. So are we. The nine things FI99 holds to be true."
+  description="You are early. So are we. What FI99 holds to be true."
 >
   <section class="py-12 sm:py-16" aria-labelledby="manifesto-heading">
     <div class="px-4 sm:px-6">
-      <SectionRule label={`MANIFESTO — ${count} PRINCIPLES`} />
+      <SectionRule label="MANIFESTO" />
       <h2
         id="manifesto-heading"
         data-split

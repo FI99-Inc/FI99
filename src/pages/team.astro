@@ -3,8 +3,6 @@ import Base from '../layouts/Base.astro';
 import SectionRule from '../components/SectionRule.astro';
 import PersonCard from '../components/PersonCard.astro';
 import { people } from '../data/people.js';
-
-const count = String(people.length).padStart(2, '0');
 ---
 
 <Base
@@ -13,7 +11,7 @@ const count = String(people.length).padStart(2, '0');
 >
   <section class="py-12 sm:py-16" aria-labelledby="team-heading">
     <div class="px-4 sm:px-6">
-      <SectionRule label={`PERSONNEL — ${count} ON FILE`} />
+      <SectionRule label="PERSONNEL" />
       <h2
         id="team-heading"
         data-split
@@ -21,9 +19,6 @@ const count = String(people.length).padStart(2, '0');
       >
         The three of us
       </h2>
-      <p class="mt-6 max-w-2xl text-base text-bone/70 sm:text-lg">
-        Three schools, three cities, one group chat that will not stop.
-      </p>
     </div>
     <ul class="mt-12 grid list-none grid-cols-1 border-t border-bone/20 sm:grid-cols-3">
       {people.map((person) => <PersonCard person={person} />)}

@@ -25,13 +25,24 @@ const selected = projects.slice(0, 3);
     <div class="sm:contents">
       <div class="hero-mark flex items-end justify-between gap-4" aria-hidden="true">
         <span class="hero-fi hero-snap font-display font-black uppercase leading-none tracking-tight">
-          <span class="grad-text grad-scroll">FI</span>
+          {/* data-ripple only on the hero mark, not the header lockup: that
+              one is the home link, and a navigation would cut the wave off
+              a few frames in. */}
+          <span class="grad-text grad-scroll" data-ripple>FI</span>
         </span>
         <Multiline99 draw class="hero-99 crt-glow" />
       </div>
       <div class="mt-6 sm:mt-14">
-        <p class="hero-snap font-display text-[clamp(1.375rem,3.5vw,3rem)] font-medium leading-tight">
-          We create things.
+        {/* aria-hidden because the sr-only h1 above already carries this exact
+            sentence — and because the last word rewrites itself every few
+            seconds, which a screen reader has no good way to report. The
+            markup ships "things.", which is what no-JS and reduced-motion
+            visitors keep. */}
+        <p
+          class="hero-snap font-display text-[clamp(1.375rem,3.5vw,3rem)] font-medium leading-tight"
+          aria-hidden="true"
+        >
+          We create <span class="hero-word" data-word-cycle>things.</span>
         </p>
         <!-- TODO(fi99): [SUBLINE] — confirm this line, add a location if we want one -->
         <p class="hero-snap mt-4 font-mono text-xs tracking-[0.2em] text-bone/60 sm:text-sm">
@@ -46,16 +57,16 @@ const selected = projects.slice(0, 3);
     </div>
   </section>
 
-  <!-- Selected work -->
+  <!-- The lab — the three projects that are worth showing -->
   <section class="px-0 py-16 sm:py-24" aria-labelledby="work-heading">
     <div class="px-4 sm:px-6">
-      <SectionRule label="SELECTED WORK" />
+      <SectionRule label="THE LAB" />
       <h2
         id="work-heading"
         data-split
         class="mt-6 font-display text-[clamp(2rem,6vw,5rem)] font-black uppercase leading-none tracking-tight"
       >
-        Selected work
+        The Lab
       </h2>
     </div>
     <ul class="mt-10 list-none">

@@ -11,6 +11,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { SplitText } from 'gsap/SplitText';
 import { initScramble } from './scramble.js';
 import { initSmoothScroll, resetSmoothScroll } from './smoothscroll.js';
+import { initWordCycle } from './wordcycle.js';
 
 gsap.registerPlugin(ScrollTrigger, SplitText);
 
@@ -221,6 +222,75 @@ function starTrails() {
   };
 }
 
+// Clicking the mark drops a ripple across it. The rings themselves live in
+// global.css (see .grad-scroll[data-ripple]) — everything here does is aim
+// one, run it outward, and hand the slot back.
+const RIPPLE_SLOTS = 3;
+
+function clickRipples() {
+  const surfaces = gsap.utils.toArray('[data-ripple]');
+  if (!surfaces.length) return null;
+
+  const stops = [];
+
+  surfaces.forEach((el) => {
+    // One timeline per slot, so a fourth click within a wave's lifetime
+    // recycles the oldest ring instead of leaving two tweens fighting over
+    // the same variables.
+    const running = new Array(RIPPLE_SLOTS).fill(null);
+    let next = 0;
+
+    const onDown = (event) => {
+      const rect = el.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+
+      // Out to the farthest corner: a wave that stopped at the nearest edge
+      // would visibly die mid-glyph on an off-centre click.
+      const reach = Math.max(
+        Math.hypot(x, y),
+        Math.hypot(rect.width - x, y),
+        Math.hypot(x, rect.height - y),
+        Math.hypot(rect.width - x, rect.height - y)
+      );
+
+      const i = next;
+      next = (next + 1) % RIPPLE_SLOTS;
+      running[i]?.kill();
+
+      gsap.set(el, { [`--r${i}x`]: x, [`--r${i}y`]: y, [`--r${i}r`]: 0, [`--r${i}a`]: 1 });
+
+      running[i] = gsap
+        .timeline({
+          onStart: () => el.style.setProperty(`--ripple-${i}`, `var(--ripple-ring-${i})`),
+          onComplete: () => {
+            // Drop the layer rather than leaving it at alpha 0 — an idle
+            // ripple would still be repainted on every scrolled frame.
+            el.style.removeProperty(`--ripple-${i}`);
+            running[i] = null;
+          },
+        })
+        // Fast off the mark and decelerating: water spreads on the energy of
+        // the impact and never gets any more.
+        .to(el, { [`--r${i}r`]: reach + 40, duration: 1.25, ease: 'power2.out' }, 0)
+        // Held bright, then dropped late, so the ring reads as a wave that
+        // fades rather than a circle that shrinks away.
+        .to(el, { [`--r${i}a`]: 0, duration: 1.25, ease: 'power2.in' }, 0);
+    };
+
+    el.addEventListener('pointerdown', onDown);
+    stops.push(() => {
+      el.removeEventListener('pointerdown', onDown);
+      running.forEach((tl, i) => {
+        tl?.kill();
+        el.style.removeProperty(`--ripple-${i}`);
+      });
+    });
+  });
+
+  return () => stops.forEach((stop) => stop());
+}
+
 let mm;
 
 function boot() {
@@ -239,7 +309,7 @@ function boot() {
     headingReveals();
     scrollReveals();
     gradientScroll();
-    const stops = [gradientPointer(), starTrails()];
+    const stops = [gradientPointer(), starTrails(), clickRipples(), initWordCycle()];
     initScramble();
     // matchMedia runs this on revert, which teardown() triggers per swap.
     return () => stops.forEach((stop) => stop?.());

@@ -1,0 +1,72 @@
+---
+// The header's live readout: where FI99 is, and what time it is there.
+//
+// This fills the void between the logo and the nav. That slot is chrome, and
+// chrome carries state, not content — everything here is either true-forever
+// (city, coordinates) or genuinely live (date, clock), and none of it is a
+// message. A permanently visible element that says something reads as a
+// billboard; one that reports something reads as an instrument, which is the
+// register the rest of the site is already in.
+//
+// The clock runs on our time, not the visitor's. Showing someone their own
+// clock tells them nothing they don't know; showing them ours says where we
+// are and whether we're plausibly awake. Naming the IANA zone rather than a
+// fixed offset is also what keeps the EST/EDT suffix correct across DST
+// without a table of dates to maintain.
+//
+// Toronto because that is where all three of us are — see people.js. Changing
+// cities is this object and nothing else.
+const place = {
+  label: 'TORONTO',
+  zone: 'America/Toronto',
+  lat: '43.65°N',
+  lon: '79.38°W',
+};
+
+// The dashes are the no-JS state, and they are deliberate. A static build can
+// only bake in its own build time, so rendering a real clock here would ship a
+// number that is confidently wrong and stays wrong. Dashes say "live readout,
+// not running", which is true. Each placeholder matches its value's character
+// count so the mono grid never reflows when the script fills them in.
+---
+
+<!-- Hidden below lg on purpose. Base.astro's nav comment records that four
+     items already crowd the header at 320px; there is no room to buy back on
+     phones, and a cramped readout is worse than none. -->
+<div
+  class="hidden select-none items-center gap-3 px-6 font-mono text-[11px] tracking-[0.2em] lg:flex"
+  data-readout
+  data-zone={place.zone}
+  transition:persist="readout"
+>
+  <span class="text-bone/55">{place.label}</span>
+
+  <!-- Coordinates are the first thing to go when the gap narrows: they are the
+       most ornamental value here, and the least missed. -->
+  <span class="hidden text-bone/20 xl:block" aria-hidden="true">·</span>
+  <span class="hidden text-bone/35 xl:block">{place.lat} {place.lon}</span>
+
+  <span class="text-bone/20" aria-hidden="true">·</span>
+  <span class="text-bone/40" data-readout-date>----------</span>
+
+  <span class="text-bone/20" aria-hidden="true">·</span>
+
+  <!-- aria-hidden: a value that rewrites itself every second is noise to a
+       screen reader and there is no reading of it a listener benefits from.
+       The city and coordinates above stay exposed — that is the part carrying
+       information, and it never changes.
+
+       flex, so the whitespace between these spans collapses and the spacing is
+       stated rather than inherited from source formatting: the seconds must
+       butt straight up against the minutes, and the zone must not. -->
+  <span class="flex items-center" aria-hidden="true">
+    <span class="text-bone/55" data-readout-time>--:--</span><span
+      class="text-bone/30"
+      data-readout-secs>:--</span
+    >
+    <!-- Dimmest of the three because it is the only part that moves. Putting
+         the fastest-changing digits at the lowest contrast is what keeps a
+         permanently visible clock from pulling at peripheral vision. -->
+    <span class="ml-[0.7em] text-bone/40" data-readout-zone>---</span>
+  </span>
+</div>

@@ -3,6 +3,23 @@
 // contact@fi99.ca is live and receiving (confirmed 2026-08-07). The manifesto
 // and the notes both point here, so check it still delivers before changing it.
 const email = 'contact@fi99.ca';
+
+// Four runs of arrows converge on the address. The colors are the brand ramp
+// read as distance — magenta lands nearest the button, volt sits farthest out
+// — so a run reads as an approach rather than four ornaments in a row.
+const RAMP = ['#ff1f8f', '#c525c7', '#8b2bff', '#4a25ff'];
+const N = RAMP.length;
+
+// `dist` is how far an arrow sits from the button; `i` is its place in the
+// marching wave, and it is always the reverse, so every crest travels inward.
+// The runs differ only in the order they are *read* in: a run to the left of
+// the button is written far-to-near, one to the right near-to-far.
+const near = RAMP.map((color, dist) => ({ color, dist, i: N - 1 - dist }));
+const far = [...near].reverse();
+
+// The rows above and below sit at one distance, so their ramp is decorative
+// and the wave simply sweeps left to right across them.
+const across = RAMP.map((color, i) => ({ color, i }));
 ---
 
 <section class="border-t border-bone/20" aria-labelledby="contact-heading">
@@ -18,12 +35,52 @@ const email = 'contact@fi99.ca';
     >
       Want something built? Just want to talk? Hit us up.
     </h2>
-    <a
-      href={`mailto:${email}`}
-      data-scramble
-      class="mt-8 inline-block border-2 border-void px-5 py-4 font-mono text-sm tracking-[0.2em] hover:bg-void hover:text-bone active:bg-void active:text-bone sm:text-lg"
-    >
-      {email.toUpperCase()}
-    </a>
+
+    <!-- The arrows are pure signage: they say nothing a screen reader has not
+         already been told by the link they point at, so the whole rig is
+         hidden from the accessibility tree and only the anchor is exposed.
+         Below sm the side runs drop out (see global.css) — the button alone is
+         most of a 320px panel, and there is no width left to march across. -->
+    <div class="arrow-rig mt-10">
+      <span class="arrow-run arrow-run-down" aria-hidden="true">
+        {
+          across.map((a) => (
+            <span class="arw" style={`--d:1;--i:${a.i};color:${a.color}`}>↓</span>
+          ))
+        }
+      </span>
+
+      <span class="arrow-run arrow-run-l" aria-hidden="true">
+        {
+          far.map((a) => (
+            <span class="arw" style={`--d:1;--i:${a.i};color:${a.color}`}>→</span>
+          ))
+        }
+      </span>
+
+      <a
+        href={`mailto:${email}`}
+        data-scramble
+        class="arrow-target border-2 border-void px-5 py-4 font-mono text-sm tracking-[0.2em] hover:bg-void hover:text-bone active:bg-void active:text-bone sm:text-lg"
+      >
+        {email.toUpperCase()}
+      </a>
+
+      <span class="arrow-run arrow-run-r" aria-hidden="true">
+        {
+          near.map((a) => (
+            <span class="arw" style={`--d:-1;--i:${a.i};color:${a.color}`}>←</span>
+          ))
+        }
+      </span>
+
+      <span class="arrow-run arrow-run-up" aria-hidden="true">
+        {
+          across.map((a) => (
+            <span class="arw" style={`--d:-1;--i:${a.i};color:${a.color}`}>↑</span>
+          ))
+        }
+      </span>
+    </div>
   </div>
 </section>

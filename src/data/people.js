@@ -11,7 +11,7 @@ export const people = [
     name: 'Srihith Jarabana',
     school: 'University of Toronto',
     photo: srihith,
-    bio: "The name's Jarabana, Srihith Jarabana. You can also call me SJ. I study business, and I'm interested in finance and software — but those are the obvious ones. I also like poetry, movies, train rides, and other stuff that might seem corny, but that's just me. I'm a builder at heart, ambitious, and flat-out curious.",
+    bio: "The name's Jarabana, Srihith Jarabana. You can also call me SJ. I study business, and I'm interested in finance and software — but those are the obvious ones. I also like poetry, Post Malone, train rides, and other stuff that might seem corny, but that's just me. I'm a builder at heart, ambitious, and flat-out curious.",
     links: [
       { label: 'JARABANA.COM', href: 'https://jarabana.com' },
       { label: 'LINKEDIN', href: 'https://www.linkedin.com/in/srihithjarabana/' },

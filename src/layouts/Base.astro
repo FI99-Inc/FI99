@@ -3,6 +3,7 @@ import '../styles/global.css';
 import { ClientRouter } from 'astro:transitions';
 import Multiline99 from '../components/Multiline99.astro';
 import Starfield from '../components/Starfield.astro';
+import StatusReadout from '../components/StatusReadout.astro';
 import displayFontUrl from '@fontsource-variable/unbounded/files/unbounded-latin-wght-normal.woff2?url';
 
 const {
@@ -13,11 +14,15 @@ const {
 const canonical = new URL(Astro.url.pathname, Astro.site);
 const ogImage = new URL('/og.png', Astro.site);
 
+// NOTES is deliberately absent, not gone. The section is finished and still in
+// the repo at src/pages/_notes/ — the leading underscore is what keeps Astro
+// from building those routes at all, so there is no URL to stumble onto.
+// Bringing it back is this line plus dropping that underscore.
+// { href: '/notes', label: 'NOTES' },
 const nav = [
   { href: '/work', label: 'WORK' },
   { href: '/team', label: 'TEAM' },
   { href: '/about', label: 'ABOUT' },
-  { href: '/notes', label: 'NOTES' },
 ];
 
 const year = new Date().getFullYear();
@@ -117,26 +122,33 @@ const year = new Date().getFullYear();
 
     <header class="border-b border-bone/20">
       <div class="flex items-stretch justify-between">
-        <a
-          href="/"
-          class="logo-lockup relative flex items-center gap-[0.12em] border-r border-bone/20 px-4 py-3 font-display text-lg font-black tracking-tight sm:px-6"
-          aria-label="FI99 home"
-        >
-          <!-- Atomic-age orbits behind the mark. It comes first in the DOM so
-               the two positioned children after it paint on top. -->
-          <svg
-            class="logo-orbits"
-            viewBox="-50 -30 100 60"
-            fill="none"
-            aria-hidden="true"
-            focusable="false"
+        <!-- Logo and readout are one group so justify-between still throws the
+             nav to the right edge, and the readout sits against the logo's
+             rule rather than floating in the middle of the bar. Reads as a
+             label and its instrument. -->
+        <div class="flex items-stretch">
+          <a
+            href="/"
+            class="logo-lockup relative flex items-center gap-[0.12em] border-r border-bone/20 px-4 py-3 font-display text-lg font-black tracking-tight sm:px-6"
+            aria-label="FI99 home"
           >
-            <ellipse cx="0" cy="0" rx="44" ry="15" transform="rotate(-32)" stroke="var(--color-magenta)" />
-            <ellipse cx="0" cy="0" rx="44" ry="15" transform="rotate(32)" stroke="var(--color-volt)" />
-          </svg>
-          <span class="relative grad-text grad-scroll">FI</span>
-          <Multiline99 strokeWidth={6} class="relative h-[1.05em] w-auto" />
-        </a>
+            <!-- Atomic-age orbits behind the mark. It comes first in the DOM so
+                 the two positioned children after it paint on top. -->
+            <svg
+              class="logo-orbits"
+              viewBox="-50 -30 100 60"
+              fill="none"
+              aria-hidden="true"
+              focusable="false"
+            >
+              <ellipse cx="0" cy="0" rx="44" ry="15" transform="rotate(-32)" stroke="var(--color-magenta)" />
+              <ellipse cx="0" cy="0" rx="44" ry="15" transform="rotate(32)" stroke="var(--color-volt)" />
+            </svg>
+            <span class="relative grad-text grad-scroll">FI</span>
+            <Multiline99 strokeWidth={6} class="relative h-[1.05em] w-auto" />
+          </a>
+          <StatusReadout />
+        </div>
         <nav aria-label="Main">
           <ul class="flex h-full items-stretch">
             {
@@ -191,6 +203,7 @@ const year = new Date().getFullYear();
       import '../scripts/motion.js';
       import '../scripts/cursor.js';
       import '../scripts/gravity.js';
+      import '../scripts/clock.js';
     </script>
   </body>
 </html>

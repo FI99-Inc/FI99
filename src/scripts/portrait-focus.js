@@ -1,5 +1,3 @@
-import { gsap } from 'gsap';
-
 // Which founder portrait is in colour, on devices that cannot hover.
 //
 // The portraits are duotone by default and lift to the real photograph on
@@ -94,6 +92,7 @@ export function initPortraitFocus() {
   let boxes = [];
   let current = -1;
   let lastY = null;
+  let stopped = false;
 
   // Measured on layout changes only. The alternative — reading rects on the
   // ticker — would land after starTrails() has written to the starfield on
@@ -118,24 +117,45 @@ export function initPortraitFocus() {
 
   const follow = () => {
     const y = window.scrollY;
-    // A page nobody is scrolling costs one comparison per frame and no reads
-    // at all — the same settle-and-stop contract the rest of motion.js keeps.
+    // Scroll can fire without the page having moved, so this is not dead
+    // weight — but the real reason a page at rest costs nothing is that a
+    // page at rest does not fire scroll at all.
     if (y === lastY) return;
     lastY = y;
     paint(pickFocus(boxes, y, window.innerHeight, current));
   };
 
-  // Catches the portraits loading, the fonts swapping, an orientation change
-  // and the section reflowing, all of which move the frames.
+  // Width is all the frames' own boxes depend on — they are aspect-square —
+  // so observing them alone catches an orientation change and nothing else.
+  // Reflow ABOVE the cards moves them without ever resizing them, and that is
+  // the case that actually bites: the display face ships font-display: swap,
+  // and the clamp()ed heading right above the first card re-wraps when it
+  // lands, walking every frame down the page. Watching the body catches that
+  // as a document-height change, and fonts.ready catches the specific moment
+  // even when the re-wrap happens to leave the height alone.
   const observer = new ResizeObserver(measure);
   frames.forEach((frame) => observer.observe(frame));
+  observer.observe(document.body);
 
   measure();
   follow();
-  gsap.ticker.add(follow);
+  // Resolves whenever it resolves, which can be after a client-side
+  // navigation has already torn this driver down.
+  document.fonts.ready.then(() => {
+    if (!stopped) measure();
+  });
+
+  // A passive scroll listener rather than gsap.ticker, alone among this
+  // codebase's drivers. GSAP parks its rAF loop only while it holds fewer
+  // than two listeners, and on a reduced-motion phone nothing else registers
+  // — so a ticker callback here would keep the main thread waking every
+  // frame, for the whole session, for exactly the people who asked for less.
+  // starTrails needs per-frame velocity; this only needs to react to scroll.
+  window.addEventListener('scroll', follow, { passive: true });
 
   return () => {
-    gsap.ticker.remove(follow);
+    stopped = true;
+    window.removeEventListener('scroll', follow);
     observer.disconnect();
     cards.forEach((card) => card.style.removeProperty('--portrait-color'));
   };

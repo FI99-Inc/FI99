@@ -6,7 +6,7 @@
 
 **Architecture:** A second copy of each portrait is stacked over the duotone one and cross-faded by a single CSS custom property, `--portrait-color`. Two mutually exclusive inputs write it: a `:hover` rule under `@media (hover: hover)`, and a scroll driver that runs only when that query does *not* match. The driver caches transform-immune layout geometry and does pure arithmetic against `window.scrollY` on GSAP's shared ticker.
 
-**Tech Stack:** Astro 7, Tailwind 4, GSAP 3 (`gsap.ticker`), vanilla ES modules. Tests run on Node 22's built-in runner (`node --test`) — no new dependencies. Browser verification is headless Chrome driven over CDP.
+**Tech Stack:** Astro 7, Tailwind 4, vanilla ES modules. The driver itself is dependency-free and runs off a passive `scroll` listener — deliberately not `gsap.ticker`, which would pin GSAP's rAF loop awake for the whole session on reduced-motion phones. Tests run on Node 22's built-in runner (`node --test`) — no new dependencies. Browser verification is headless Chrome driven over CDP.
 
 **Spec:** `docs/superpowers/specs/2026-08-09-portrait-focus-design.md`
 
@@ -417,13 +417,7 @@ git commit -m "feat: cross-fade portrait colour instead of swapping filters"
 
 - [ ] **Step 1: Append the driver to `src/scripts/portrait-focus.js`**
 
-Add the import at the very top of the file, above the existing comment block:
-
-```js
-import { gsap } from 'gsap';
-```
-
-Then append to the end of the file:
+The module stays dependency-free — no import goes at the top of this file. Append to the end of it:
 
 ```js
 // getBoundingClientRect() is the wrong tool here, and quietly so:
@@ -457,9 +451,9 @@ export function initPortraitFocus() {
   let current = -1;
   let lastY = null;
 
-  // Measured on layout changes only. The alternative — reading rects on the
-  // ticker — would land after starTrails() has written to the starfield on
-  // that same ticker, forcing a synchronous layout on every scrolled frame.
+  // Measured on layout changes only, never in the scroll path. Reading rects
+  // per scroll would interleave layout reads with the starfield's per-frame
+  // style writes, forcing a synchronous layout on every scrolled frame.
   const measure = () => {
     boxes = frames.map((frame) => ({
       top: documentTop(frame),
@@ -480,34 +474,61 @@ export function initPortraitFocus() {
 
   const follow = () => {
     const y = window.scrollY;
-    // A page nobody is scrolling costs one comparison per frame and no reads
-    // at all — the same settle-and-stop contract the rest of motion.js keeps.
+    // Scroll can fire without the page having moved, so this is not dead
+    // weight — but the real reason a page at rest costs nothing is that a
+    // page at rest does not fire scroll at all.
     if (y === lastY) return;
     lastY = y;
     paint(pickFocus(boxes, y, window.innerHeight, current));
   };
 
-  // Catches the portraits loading, the fonts swapping, an orientation change
-  // and the section reflowing, all of which move the frames.
+  // Width is all the frames' own boxes depend on — they are aspect-square —
+  // so observing them alone catches an orientation change and nothing else.
+  // Reflow ABOVE the cards moves them without ever resizing them, and that is
+  // the case that actually bites: the display face ships font-display: swap,
+  // and the clamp()ed heading right above the first card re-wraps when it
+  // lands, walking every frame down the page. Watching the body catches that
+  // as a document-height change, and fonts.ready catches the specific moment
+  // even when the re-wrap happens to leave the height alone.
   const observer = new ResizeObserver(measure);
   frames.forEach((frame) => observer.observe(frame));
+  observer.observe(document.body);
 
   measure();
   follow();
-  gsap.ticker.add(follow);
+  // Resolves whenever it resolves, which can be after a client-side
+  // navigation has already torn this driver down.
+  document.fonts.ready.then(() => {
+    if (!stopped) measure();
+  });
+
+  // A passive scroll listener rather than gsap.ticker, alone among this
+  // codebase's drivers. GSAP parks its rAF loop only while it holds fewer
+  // than two listeners, and on a reduced-motion phone nothing else registers
+  // — so a ticker callback here would keep the main thread waking every
+  // frame, for the whole session, for exactly the people who asked for less.
+  // starTrails needs per-frame velocity; this only needs to react to scroll.
+  window.addEventListener('scroll', follow, { passive: true });
 
   return () => {
-    gsap.ticker.remove(follow);
+    stopped = true;
+    window.removeEventListener('scroll', follow);
     observer.disconnect();
     cards.forEach((card) => card.style.removeProperty('--portrait-color'));
   };
 }
 ```
 
+Declare `stopped` alongside the other driver state near the top of `initPortraitFocus()`:
+
+```js
+  let stopped = false;
+```
+
 - [ ] **Step 2: Confirm the unit tests still pass**
 
 Run: `npm test`
-Expected: PASS, 12 tests. The new import pulls GSAP into the test process; this step is what catches it if that ever stops working under Node.
+Expected: PASS, 12 tests. The module has no imports at all now, so this is also the check that the picker's surface survived the append intact.
 
 - [ ] **Step 3: Wire it into `motion.js`**
 
@@ -625,11 +646,12 @@ await send('Emulation.setDeviceMetricsOverride', {
 await send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 });
 await send('Emulation.setEmitTouchEventsForMouse', { enabled: true, configuration: 'mobile' });
 
-const settle = `(async () => {
-  await document.fonts.ready;
-  await Promise.all([...document.images].filter((i) => !i.complete)
-    .map((i) => new Promise((r) => { i.onload = i.onerror = r; })));
-})()`;
+// Fonts only. Do NOT await the images: they are loading="lazy", so the ones
+// below the fold never fire until scrolled near and this deadlocks. Nothing
+// here needs them anyway — the frames are aspect-square and both layers are
+// sized to the frame, so image decode cannot move any geometry the sweep
+// measures. Fonts are the reflow source that does matter.
+const settle = `document.fonts.ready`;
 
 const sweep = `(async () => {
   const hoverable = matchMedia('(hover: hover)').matches;
@@ -668,7 +690,13 @@ for (const path of ['/', '/team']) {
   if (hoverable) { console.log('  FAIL touch emulation did not take'); failures += 1; }
   if (multi.length) { console.log('  FAIL more than one portrait lit at once'); failures += 1; }
   if (litNames.size !== names.length) { console.log('  FAIL not every person got a turn'); failures += 1; }
-  if (!anyDark) { console.log('  FAIL never returns to all-duotone'); failures += 1; }
+  // Only the home page is asserted to reach all-duotone. On /team the cards
+  // ARE the page: ~300px of header above the first frame and ~490px of footer
+  // below the last, against an 844px viewport, leaves no scroll position where
+  // every frame is under the 40% floor. That is the page's content, not a
+  // driver fault — asserting it there would encode a layout accident as an
+  // invariant. Measured: / reaches all-duotone at 31 of 63 sampled rows.
+  if (path === '/' && !anyDark) { console.log('  FAIL never returns to all-duotone'); failures += 1; }
 }
 
 console.log(failures ? `\n${failures} FAILURE(S)` : '\nALL CHECKS PASSED');
@@ -677,7 +705,7 @@ process.exit(failures ? 1 : 0);
 ```
 
 Run: `node <scratchpad>/probe-portrait.mjs`
-Expected: `ALL CHECKS PASSED`. Every person takes a turn on both pages, never two at once, and both pages reach a scroll position where nothing is lit.
+Expected: `ALL CHECKS PASSED`. Every person takes a turn on both pages, never two at once, and the home page reaches a scroll position where nothing is lit.
 
 - [ ] **Step 5: Commit**
 

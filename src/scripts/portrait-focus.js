@@ -1,11 +1,17 @@
-// Which founder portrait is in colour, on devices that cannot hover.
+// Which founder portrait is in colour, on a stacked single-column layout on
+// a device that cannot hover.
 //
 // The portraits are duotone by default and lift to the real photograph on
 // hover (see .portrait-card:hover in global.css). That rule lives inside
 // @media (hover: hover), so a phone never reached it and the colour
 // photographs were simply unreachable there. Scroll is the phone's cursor:
 // whichever portrait takes up the most of the screen is the one you are
-// looking at, so that is the one that gets its colour back.
+// looking at, so that is the one that gets its colour back. That trick only
+// works while the cards are stacked, though: side by side in the sm:
+// three-up grid the frames are identical in size and scroll together, so no
+// position ever makes one of them "the one you are looking at" — the driver
+// stays out entirely there rather than latching onto whichever one a
+// grid-rounding pixel happened to favour on the first measurement.
 
 // How much of its own height a portrait must have on screen before it counts
 // as something you are looking at rather than scenery. Below this nobody
@@ -83,6 +89,12 @@ export function initPortraitFocus() {
   // so the two can never both drive a card and never both go quiet.
   if (window.matchMedia('(hover: hover)').matches) return null;
 
+  // Side by side, the three portraits are the same size and move together:
+  // no scroll position makes one of them the one you are looking at, so none
+  // of them earns colour. This is the sm: breakpoint where the grid goes
+  // three-up — below it the cards stack and one really can dominate.
+  if (window.matchMedia('(min-width: 40rem)').matches) return null;
+
   const cards = Array.from(document.querySelectorAll('.portrait-card')).filter((card) =>
     card.querySelector('.portrait-color')
   );
@@ -95,8 +107,12 @@ export function initPortraitFocus() {
   let stopped = false;
 
   // Measured on layout changes only. The alternative — reading rects on the
-  // ticker — would land after starTrails() has written to the starfield on
-  // that same ticker, forcing a synchronous layout on every scrolled frame.
+  // ticker — would still land after a style write on that same frame: ticker
+  // listener 0 is GSAP's own Timeline.updateRoot, added the moment gsap-core
+  // loads, so it runs ahead of every other ticker callback and writes that
+  // frame's tween styles first. A rect read afterward would force a
+  // synchronous layout on every scrolled frame, regardless of where this
+  // driver's own callback happened to sit in the list.
   const measure = () => {
     boxes = frames.map((frame) => ({
       top: documentTop(frame),
@@ -148,9 +164,16 @@ export function initPortraitFocus() {
   // A passive scroll listener rather than gsap.ticker, alone among this
   // codebase's drivers. GSAP parks its rAF loop only while it holds fewer
   // than two listeners, and on a reduced-motion phone nothing else registers
-  // — so a ticker callback here would keep the main thread waking every
-  // frame, for the whole session, for exactly the people who asked for less.
-  // starTrails needs per-frame velocity; this only needs to react to scroll.
+  // — so a ticker callback here would be adding a reason for the main thread
+  // to wake every frame, for exactly the people who asked for less. It would
+  // only be adding one, though: ScrollTrigger's own _rafBugFix starts an
+  // unrelated, self-perpetuating requestAnimationFrame loop the moment
+  // gsap.registerPlugin(ScrollTrigger, ...) runs in motion.js, with no
+  // reduced-motion gate of its own — so that loop is already running for
+  // these users regardless of what this driver does. Today this listener
+  // avoids adding a second cost on top of one that already exists; it stops
+  // being merely hypothetical the day the first one is fixed. starTrails
+  // needs per-frame velocity; this only needs to react to scroll.
   window.addEventListener('scroll', follow, { passive: true });
 
   return () => {

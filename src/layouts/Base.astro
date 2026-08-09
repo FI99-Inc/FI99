@@ -5,6 +5,12 @@ import Multiline99 from '../components/Multiline99.astro';
 import Starfield from '../components/Starfield.astro';
 import StatusReadout from '../components/StatusReadout.astro';
 import displayFontUrl from '@fontsource-variable/unbounded/files/unbounded-latin-wght-normal.woff2?url';
+// The body and mono faces paint the first screen too (tagline, nav, section
+// rules), so they get the same treatment as the display face: preloaded
+// rather than discovered through the CSS, which on a phone connection is the
+// difference between text arriving set and text arriving twice.
+import bodyFontUrl from '@fontsource-variable/space-grotesk/files/space-grotesk-latin-wght-normal.woff2?url';
+import monoFontUrl from '@fontsource-variable/jetbrains-mono/files/jetbrains-mono-latin-wght-normal.woff2?url';
 
 const {
   title = 'FI99 — We create things.',
@@ -32,6 +38,9 @@ const year = new Date().getFullYear();
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- Phone browsers paint their own chrome around the page — address bar,
+         tab strip, overscroll. Without this they frame the void in white. -->
+    <meta name="theme-color" content="#060606" />
     <title>{title}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
@@ -40,6 +49,20 @@ const year = new Date().getFullYear();
     <link
       rel="preload"
       href={displayFontUrl}
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      href={bodyFontUrl}
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      href={monoFontUrl}
       as="font"
       type="font/woff2"
       crossorigin

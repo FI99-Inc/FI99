@@ -36,6 +36,16 @@
     color: var(--color-bone);
   }
 
+  /* Dark-scheme UI — overscroll ground, form controls — on touch devices,
+     where the browser paints real estate around the page. Scoped to
+     hover:none on purpose: unscoped it would also restyle desktop scrollbars,
+     and the desktop rendering is settled. */
+  @media (hover: none) {
+    html {
+      color-scheme: dark;
+    }
+  }
+
   body {
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
@@ -515,6 +525,13 @@ html.motion .ml99-draw .ml99-path {
   .logo-lockup:hover .logo-orbits {
     opacity: 0.9;
   }
+}
+
+/* Press feedback for touch, where hover never fires. Deliberately ungated:
+   on a mouse this is a no-op, since reaching :active means the hover rule
+   above is already holding the same value. */
+.logo-lockup:active .logo-orbits {
+  opacity: 0.9;
 }
 
 /* ---- Custom cursor (desktop, fine pointers, motion allowed) ---- */

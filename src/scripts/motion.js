@@ -152,6 +152,95 @@ function gradientPointer() {
   };
 }
 
+// Tilt is the phone's cursor. gradientPointer above nudges the sweep ±6%
+// as the mouse crosses the window; here the same --grad-x/--grad-y contract
+// is driven by deviceorientation instead, so rocking the phone slides the
+// gradient through the glyphs like light across a holographic card. The
+// variables are measured from 0.5 and clamped to 0..1, which keeps the sweep
+// inside the seam budget .grad-scroll documents — tilt cannot push it
+// anywhere the cursor could not.
+//
+// Tilt is read against how the phone is being held, not against gravity: the
+// baseline seeds from the first event and then trails the readings, so a
+// phone flat on a table and a phone held up in bed both start at rest. Only
+// the rock away from that posture registers, and a sustained new posture
+// becomes the new rest.
+//
+// iOS never delivers deviceorientation without a permission dialog, and a
+// dialog is too high a price for a shimmer — so there this stays silent and
+// scroll alone drives the gradient, as it always has. Android fires freely.
+function gradientTilt() {
+  const els = gsap.utils.toArray('.grad-scroll');
+  // Exactly the complement of gradientPointer's gate, so one of the two owns
+  // the variables and they never both write.
+  if (!els.length || window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+    return null;
+  }
+
+  // Degrees of rock that count as full deflection. Small on purpose: the
+  // effect should live in the wrist, not require turning the phone over.
+  const RANGE = 16;
+  let base = null;
+  const target = { x: 0.5, y: 0.5 };
+  const current = { x: 0.5, y: 0.5 };
+  const clamp1 = gsap.utils.clamp(-1, 1);
+
+  const onTilt = (event) => {
+    if (event.beta == null || event.gamma == null) return;
+    // gamma rocks left-right and beta toward-away — in portrait. A rotated
+    // screen swaps which physical axis is horizontal, so remap by the
+    // current orientation angle or landscape tilts feel cross-wired.
+    const angle = (screen.orientation && screen.orientation.angle) || 0;
+    let g = event.gamma;
+    let b = event.beta;
+    if (angle === 90) {
+      const t = g;
+      g = b;
+      b = -t;
+    } else if (angle === 270) {
+      const t = g;
+      g = -b;
+      b = t;
+    } else if (angle === 180) {
+      g = -g;
+      b = -b;
+    }
+    if (!base) base = { g, b };
+    base.g += (g - base.g) * 0.008;
+    base.b += (b - base.b) * 0.008;
+    target.x = 0.5 + clamp1((g - base.g) / RANGE) * 0.5;
+    target.y = 0.5 + clamp1((b - base.b) / RANGE) * 0.5;
+  };
+
+  const apply = () => {
+    els.forEach((el) => {
+      el.style.setProperty('--grad-x', current.x.toFixed(4));
+      el.style.setProperty('--grad-y', current.y.toFixed(4));
+    });
+  };
+
+  // Same settle-and-stop pattern as the pointer: a phone at rest costs no
+  // style writes at all. The sensor is noisier than a mouse, so the ease is
+  // a touch slower and doubles as the smoothing.
+  const follow = (time, deltaTime) => {
+    const dx = target.x - current.x;
+    const dy = target.y - current.y;
+    if (Math.abs(dx) < 0.0004 && Math.abs(dy) < 0.0004) return;
+    const k = 1 - Math.exp(-deltaTime / 120);
+    current.x += dx * k;
+    current.y += dy * k;
+    apply();
+  };
+
+  window.addEventListener('deviceorientation', onTilt, { passive: true });
+  gsap.ticker.add(follow);
+
+  return () => {
+    window.removeEventListener('deviceorientation', onTilt);
+    gsap.ticker.remove(follow);
+  };
+}
+
 // Scroll velocity smears the starfield into short trails. Read straight off
 // window.scrollY rather than from Lenis: Lenis runs with syncTouch off, so on
 // a phone the platform scrolls natively and Lenis never sees the velocity.
@@ -309,7 +398,7 @@ function boot() {
     headingReveals();
     scrollReveals();
     gradientScroll();
-    const stops = [gradientPointer(), starTrails(), clickRipples(), initWordCycle()];
+    const stops = [gradientPointer(), gradientTilt(), starTrails(), clickRipples(), initWordCycle()];
     initScramble();
     // matchMedia runs this on revert, which teardown() triggers per swap.
     return () => stops.forEach((stop) => stop?.());

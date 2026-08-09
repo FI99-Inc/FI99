@@ -16,7 +16,12 @@ const { person, compact = false } = Astro.props;
         <Image
           src={person.photo}
           alt={`${person.name}, photographed.`}
-          widths={[320, 560]}
+          /* 1080 exists for phones: the card runs 92vw there, and at dpr 3
+             that is ~1080 real pixels — served 560, the portraits arrive
+             soft. Desktop at dpr 1 still picks the same 560 it always has.
+             Srihith's source is 665px wide, so his set simply tops out
+             there; Astro never upscales. */
+          widths={[320, 560, 1080]}
           sizes="(min-width: 40rem) 30vw, 92vw"
           class="portrait-img h-full w-full object-cover"
           loading="lazy"

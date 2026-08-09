@@ -74,8 +74,15 @@ test('an incumbent that drops below the floor yields immediately', () => {
   assert.equal(pickFocus(boxes, 360, VH, 0), 1);
 });
 
-test('the winner is stable while it stays the winner', () => {
-  assert.equal(pickFocus(stack, 500, VH, 1), 1);
+test('the incumbent only holds the lead because it is the incumbent', () => {
+  const boxes = [
+    { top: 0, height: 100, width: 100 },
+    { top: 0, height: 105, width: 100 },
+  ];
+  // Same geometry, different incumbent, different winner: proof that
+  // `current` is what decided it and not the areas.
+  assert.equal(pickFocus(boxes, 0, VH, -1), 1);
+  assert.equal(pickFocus(boxes, 0, VH, 0), 0);
 });
 
 test('boxes with no size are ignored', () => {

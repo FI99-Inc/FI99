@@ -82,8 +82,12 @@ three people have photographs now; `Base.astro` already says so correctly.
 
 ### 3. The scroll driver
 
-`portraitFocus()` in `src/scripts/motion.js`, returning a stop function like
-`starTrails()` and the gradient drivers do.
+`initPortraitFocus()` in a new `src/scripts/portrait-focus.js`, returning a stop
+function like `starTrails()` and the gradient drivers do. It gets its own module
+rather than a function in `motion.js` — the same shape `scramble.js`,
+`wordcycle.js` and `smoothscroll.js` already take — because its winner-picking
+half is pure arithmetic and worth unit-testing on its own, and `motion.js` is
+already past 400 lines.
 
 **Gate.** Return `null` immediately if `(hover: hover)` matches. This is the
 exact complement of the CSS rule, so hover and scroll can never both drive the
@@ -91,8 +95,16 @@ same card.
 
 **Measurement cache.** Each frame's document offset and size are measured once
 and refreshed by a `ResizeObserver` on the frames. That covers image load,
-orientation change, font swap, and the reveal tweens settling. During scroll the
-driver does pure arithmetic against `window.scrollY`:
+orientation change, font swap, and reflow.
+
+Measurement walks the `offsetTop` / `offsetParent` chain rather than reading
+`getBoundingClientRect()`. `html.motion [data-reveal]` parks every card at
+`translateY(28px)` until GSAP reveals it, and a `ResizeObserver` never fires on
+a transform change — so a rect cached for a card still below the fold would stay
+28px wrong permanently. `offsetTop` is layout rather than paint and ignores
+transforms entirely.
+
+During scroll the driver does pure arithmetic against `window.scrollY`:
 
 ```
 top     = cachedTop - scrollY
@@ -130,7 +142,7 @@ frame.
 
 ### 4. Reduced motion
 
-`portraitFocus()` registers in `boot()` but **outside** the
+`initPortraitFocus()` registers in `boot()` but **outside** the
 `prefers-reduced-motion: no-preference` matchMedia block that gates everything
 else in the file. Its stop is held separately and called from `teardown()`.
 

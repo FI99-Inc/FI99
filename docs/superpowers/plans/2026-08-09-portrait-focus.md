@@ -262,9 +262,26 @@ Markup and CSS. After this task hover cross-fades on desktop and touch is still 
 - Consumes: nothing from Task 1.
 - Produces: the DOM contract Task 3 depends on — a `.portrait-card` element containing a `.portrait-frame`, which contains a `.portrait-color` layer whose opacity reads the `--portrait-color` custom property. Task 3 sets that property on the **card**, not the frame or the layer.
 
-- [ ] **Step 1: Add the colour layer to the card**
+- [ ] **Step 1: Hoist the responsive-image settings into the frontmatter**
 
-In `src/components/PersonCard.astro`, replace the `person.photo ?` branch (the whole `<Image .../>` element, lines 16–28) with a fragment holding two images:
+In `src/components/PersonCard.astro`, add to the frontmatter block after the `const { person, compact = false }` line:
+
+```js
+// Both portrait layers must resolve the same srcset candidate — that is the
+// whole reason the colour copy below costs no second download. Held in one
+// place so the two cannot drift apart.
+//
+// 1080 exists for phones: the card runs 92vw there, and at dpr 3 that is
+// ~1080 real pixels — served 560, the portraits arrive soft. Desktop at dpr 1
+// still picks the same 560 it always has. Srihith's source is 665px wide, so
+// his set simply tops out there; Astro never upscales.
+const PORTRAIT_WIDTHS = [320, 560, 1080];
+const PORTRAIT_SIZES = '(min-width: 40rem) 30vw, 92vw';
+```
+
+- [ ] **Step 2: Add the colour layer to the card**
+
+Replace the `person.photo ?` branch (the whole `<Image .../>` element and its preceding comment, lines 16–28) with a fragment holding two images:
 
 ```astro
       person.photo ? (
@@ -272,30 +289,22 @@ In `src/components/PersonCard.astro`, replace the `person.photo ?` branch (the w
           <Image
             src={person.photo}
             alt={`${person.name}, photographed.`}
-            /* 1080 exists for phones: the card runs 92vw there, and at dpr 3
-               that is ~1080 real pixels — served 560, the portraits arrive
-               soft. Desktop at dpr 1 still picks the same 560 it always has.
-               Srihith's source is 665px wide, so his set simply tops out
-               there; Astro never upscales. */
-            widths={[320, 560, 1080]}
-            sizes="(min-width: 40rem) 30vw, 92vw"
+            widths={PORTRAIT_WIDTHS}
+            sizes={PORTRAIT_SIZES}
             class="portrait-img h-full w-full object-cover"
             loading="lazy"
             decoding="async"
           />
           {/* The same photograph again, unfiltered, stacked on top and faded
-              in by --portrait-color. Identical widths and sizes mean the
-              browser resolves the same srcset candidate for both, so the
-              second one is a cache hit and not a second download — check the
-              network panel if either list is ever edited. Hidden from
-              assistive tech and given an empty alt because it is the image
-              above, not a new one; without that it is announced twice. */}
+              in by --portrait-color. Hidden from assistive tech and given an
+              empty alt because it is the image above, not a new one; without
+              that it is announced twice. */}
           <Image
             src={person.photo}
             alt=""
             aria-hidden="true"
-            widths={[320, 560, 1080]}
-            sizes="(min-width: 40rem) 30vw, 92vw"
+            widths={PORTRAIT_WIDTHS}
+            sizes={PORTRAIT_SIZES}
             class="portrait-color object-cover"
             loading="lazy"
             decoding="async"
@@ -306,7 +315,7 @@ In `src/components/PersonCard.astro`, replace the `person.photo ?` branch (the w
 
 Leave the `[ NO PHOTO ON FILE ]` branch exactly as it is. It gets no colour layer, which is what makes the driver skip that card.
 
-- [ ] **Step 2: Replace the portrait CSS block**
+- [ ] **Step 3: Replace the portrait CSS block**
 
 In `src/styles/global.css`, replace lines 298–321 in full — the `---- Founder portraits ----` comment through the closing brace of the `@media (hover: hover)` block — with:
 
@@ -362,7 +371,7 @@ In `src/styles/global.css`, replace lines 298–321 in full — the `---- Founde
 }
 ```
 
-- [ ] **Step 3: Verify the build and the asset count**
+- [ ] **Step 4: Verify the build and the asset count**
 
 Run: `npm run build`
 Expected: build succeeds with no warnings about the images.
@@ -373,14 +382,14 @@ Then confirm the duplicate `<Image>` did not duplicate the asset. Astro emits th
 grep -o 'srcset="[^"]*srihith[^"]*"' dist/team/index.html | sort -u | wc -l
 ```
 
-Expected: `1`. Two identical `srcset` strings collapse to one distinct value, which is what guarantees the browser resolves the same candidate for both tags and fetches once. A result of `2` means the `widths` or `sizes` lists drifted apart between the two `<Image>` calls.
+Expected: `1`. Two identical `srcset` strings collapse to one distinct value, which is what guarantees the browser resolves the same candidate for both tags and fetches once. A result of `2` means one of the tags stopped using `PORTRAIT_WIDTHS` / `PORTRAIT_SIZES`.
 
-- [ ] **Step 4: Verify hover still reaches full colour**
+- [ ] **Step 5: Verify hover still reaches full colour**
 
 Run: `npx astro dev --background`, then open `http://localhost:4321/team` and hover a portrait.
 Expected: the photograph fades to full colour over roughly half a second and fades back on exit. Before this task it snapped.
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 6: Commit**
 
 ```bash
 git add src/components/PersonCard.astro src/styles/global.css
@@ -750,7 +759,7 @@ if (images.length !== new Set(images).size) {
 ```
 
 Run: `node <scratchpad>/probe-portrait.mjs`
-Expected: request count equals distinct-URL count. A mismatch means the two `<Image>` calls in `PersonCard.astro` drifted apart on `widths` or `sizes`.
+Expected: request count equals distinct-URL count. A mismatch means the two layers are resolving different candidates despite sharing `PORTRAIT_WIDTHS` / `PORTRAIT_SIZES` — check that both tags still carry both attributes.
 
 - [ ] **Step 4: Client-side navigation leaves nothing behind**
 

@@ -139,13 +139,23 @@ frame, whatever position this driver's own callback happened to occupy in the
 list.
 
 **Driver.** A passive `scroll` listener, not `gsap.ticker`. GSAP parks its
-rAF loop only while it holds fewer than two listeners, and on a
-reduced-motion phone nothing else in this file registers a ticker callback —
-so putting this driver on the ticker would give the main thread a reason to
-wake every frame for the entire session, for exactly the people who asked for
-less motion. The listener early-outs when `scrollY` has not changed since the
-last call, and scroll does not fire at all while the page is at rest, so an
-idle page costs nothing either way.
+rAF loop only while it holds fewer than two listeners, and on a reduced-motion
+phone nothing else in this file registers a ticker callback — so a ticker
+callback here would be a standing reason to wake the main thread every frame,
+for exactly the people who asked for less motion.
+
+That saving is currently notional, and the comment in the code says so:
+`gsap.registerPlugin(ScrollTrigger, SplitText)` in `motion.js` starts
+ScrollTrigger's `_rafBugFix` — a raw, self-perpetuating `requestAnimationFrame`
+loop — at module load, with no reduced-motion gate, so that frame loop already
+runs for those users today. The scroll listener avoids *adding* to a cost that
+already exists rather than removing one. The pre-existing loop is the larger
+problem of the two and is worth its own fix; when it is fixed, this choice
+starts paying for itself.
+
+The listener early-outs when `scrollY` has not changed since the last call, and
+scroll does not fire at all while the page is at rest, so an idle page costs
+nothing either way.
 
 **Winner.** Largest visible area wins, and must clear **40% of its own height**
 on screen to win at all. Below that threshold there is no winner and every

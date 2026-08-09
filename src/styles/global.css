@@ -297,12 +297,24 @@
 
 /* ---- Founder portraits ----
    Duotone is doing real work here, not decoration: the source photos are a
-   studio headshot, a phone snapshot taken at night, and an empty slot. Mapping
-   them through one ramp (see #fi-duotone in about.astro) makes them a set.
-   It stays on by default — that unified read is the design — and lifts to the
-   real photograph on hover, which touch devices never see and do not need. */
+   studio headshot, a phone snapshot taken at night and a bright seaside
+   portrait, and mapping all three through one ramp (see #fi-duotone in
+   Base.astro) is what makes them read as one set rather than three
+   strangers. That unified read is the default and stays the default.
+
+   Colour arrives as a second copy of the same photograph stacked on top and
+   cross-faded, rather than as a filter that switches off. A filter list
+   containing a url() reference is not interpolable, so the transition this
+   block used to carry never actually ran — it only delayed a snap. Opacity
+   interpolates and composites, which is what makes it affordable on the
+   phones that now drive it by scroll.
+
+   Two inputs write --portrait-color and neither knows about the other:
+   the hover rule below, and initPortraitFocus() in portrait-focus.js. Their
+   media conditions are exact complements, so only one is ever live. */
 
 .portrait-frame {
+  position: relative;
   overflow: hidden;
 }
 
@@ -310,13 +322,26 @@
   filter: url(#fi-duotone) contrast(1.05);
 }
 
-@media (hover: hover) {
-  .portrait-img {
-    transition: filter 0.5s ease;
-  }
+.portrait-color {
+  position: absolute;
+  inset: 0;
+  opacity: var(--portrait-color, 0);
+  transition: opacity 0.45s ease;
+}
 
-  .portrait-card:hover .portrait-img {
-    filter: none;
+/* Which portrait is in colour is information — it is how you tell which
+   person you are looking at — so unlike everything else on this page it
+   still tracks scroll when reduced motion is asked for. Only the fade goes;
+   the swap becomes instant. */
+@media (prefers-reduced-motion: reduce) {
+  .portrait-color {
+    transition: none;
+  }
+}
+
+@media (hover: hover) {
+  .portrait-card:hover {
+    --portrait-color: 1;
   }
 }
 

@@ -4,6 +4,17 @@ import { Image } from 'astro:assets';
 // `compact` is the home-page cut: portrait, name and school only. The full
 // card adds the bio and the person's links, and is what /team renders.
 const { person, compact = false } = Astro.props;
+
+// Both portrait layers must resolve the same srcset candidate — that is the
+// whole reason the colour copy below costs no second download. Held in one
+// place so the two cannot drift apart.
+//
+// 1080 exists for phones: the card runs 92vw there, and at dpr 3 that is
+// ~1080 real pixels — served 560, the portraits arrive soft. Desktop at dpr 1
+// still picks the same 560 it always has. Srihith's source is 665px wide, so
+// his set simply tops out there; Astro never upscales.
+const PORTRAIT_WIDTHS = [320, 560, 1080];
+const PORTRAIT_SIZES = '(min-width: 40rem) 30vw, 92vw';
 ---
 
 <li
@@ -13,19 +24,31 @@ const { person, compact = false } = Astro.props;
   <div class="portrait-frame mb-6 aspect-square w-full border border-bone/20">
     {
       person.photo ? (
-        <Image
-          src={person.photo}
-          alt={`${person.name}, photographed.`}
-          /* 1080 exists for phones: the card runs 92vw there, and at dpr 3
-             that is ~1080 real pixels — served 560, the portraits arrive
-             soft. Desktop at dpr 1 still picks the same 560 it always has.
-             Srihith's source is 665px wide, so his set simply tops out
-             there; Astro never upscales. */
-          widths={[320, 560, 1080]}
-          sizes="(min-width: 40rem) 30vw, 92vw"
-          class="portrait-img h-full w-full object-cover"
-          loading="lazy"
-        />
+        <Fragment>
+          <Image
+            src={person.photo}
+            alt={`${person.name}, photographed.`}
+            widths={PORTRAIT_WIDTHS}
+            sizes={PORTRAIT_SIZES}
+            class="portrait-img h-full w-full object-cover"
+            loading="lazy"
+            decoding="async"
+          />
+          {/* The same photograph again, unfiltered, stacked on top and faded
+              in by --portrait-color. Hidden from assistive tech and given an
+              empty alt because it is the image above, not a new one; without
+              that it is announced twice. */}
+          <Image
+            src={person.photo}
+            alt=""
+            aria-hidden="true"
+            widths={PORTRAIT_WIDTHS}
+            sizes={PORTRAIT_SIZES}
+            class="portrait-color object-cover"
+            loading="lazy"
+            decoding="async"
+          />
+        </Fragment>
       ) : (
         /* Not a broken image — a deliberate empty slot, in the same
            filing-cabinet voice as the PERSONNEL rule above it. */

@@ -1,32 +1,51 @@
 // The manifesto. Second person on purpose: it addresses builders rather than
 // clients, so every line lands as a consequence for the reader instead of a
-// boast about us. "We think for ourselves" is a brag; "use every tool there
-// is, outsource none of the thinking" is a rule that binds whoever reads it.
+// boast about us.
 //
-// The inversion is the point. The famous version of this form toasts people
-// who have already won — every name in it was proven. This one is addressed
-// to people who have done nothing yet, the three of us included, which is why
-// it opens by conceding that in two words and moves on.
+// Rewritten 2026-08-10 in a looser, contraction-heavy voice — a deliberate
+// break from the earlier contraction-free draft. Don't "fix" the
+// contractions back out; they're the point of this version, not an error.
 //
-// Contractions are deliberate but rationed: the opening and closing speak to
-// the reader and take them, the numbered principles stay flat because they
-// are meant to read as carved rather than said.
+// Each principle now carries a `statement` (the rule, set large) and a
+// `body` (the paragraph underneath explaining it) — about.astro renders
+// both per numbered row. opening.body[0] is quoted alone on the home page,
+// so it has to stand as a single sentence on its own.
 export const opening = {
   lead: 'You are early.',
   admission: 'So are we.',
   body: [
-    "You came because there's something that won't leave you alone, and you wanted to know whether we'd understand.",
-    "We would. Here's what we hold.",
+    "Everything you'd call living, you got by walking toward someone who could have said no.",
+    "We build things, so we spend our days deciding how much of that walk to leave in. We wrote this down before we had anything substantial to point at, so you can hold us to it later.",
+    'We wrote it for three people.',
+    "The dreamer has renewed the same domain for six years and still opens the file on the subway ride home. The non-believer sat through the prototype, watched it break in the second minute, and clapped along with the room. The defector gets a strong review every cycle for work they can't describe at dinner. You have more in common than you'd admit. Each of you looked at the room you were handed and found it too small.",
   ],
 };
 
 export const principles = [
-  'Use every tool there is. Outsource none of the thinking.',
-  'Pick the idea. Never the category.',
-  'Anyone can start. The work begins after the interesting part is over.',
+  {
+    statement: 'Friction is where you decide.',
+    body: "You feel it in the second before you buy, in the effort of typing out a whole name, in a thing that holds still until you push it. Designers spent twenty years sanding that second off and called the result progress. What they removed was the part where you chose. We put it back where the stakes are high, and we won't ever apologize for the extra click.",
+  },
+  {
+    statement:
+      "If we're wrong, you lose a second. If they're wrong, you lose the choice of choosing.",
+    body: "Price both errors. Ours costs you some patience and costs someone a little revenue. Theirs you can already see: a feed studies you until the people who disagree with you stop sounding human, or you tap once and your savings are gone. Thank you very much but we'll take the patience.",
+  },
+  {
+    statement: "The tool can't answer for us.",
+    body: 'Three people with names shipped this. If we hurt someone, we won\'t tell you the model generated it, the algorithm surfaced it, the system optimized for engagement. Founders learned those sentences to put distance between themselves and their own work. We signed the page instead.',
+  },
+  {
+    statement: "We won't build the landlord's software.",
+    body: "You can see the other future from here. You rent what you use, the rent climbs, and someone took the door out. Several of the largest firms alive are building toward it and they aren't hiding it. We'd rather ship something small that runs on your machine and keeps working after we're gone. Your parents should be able to use what we make without wondering what it takes from them.",
+  },
+  {
+    statement: 'We argue, and we keep the arguments.',
+    body: "The three of us met as kids, years before we had a company or a reason. Actually, we disagree about most of what we build, and the work improves in the gap between us. You narrow when nothing pushes back. So does a company, and so does a country. We'd rather lose an argument in this room than ship a thing none of us doubted.",
+  },
 ];
 
 export const closing = [
-  "Manifestos like this are usually written afterward, by people with something to point at. We're writing ours first, and signing it.",
-  'You are early. So is this.',
+  'Manifestos usually arrive late, written by people with something to point at. We wrote ours first and signed it. If we break it, you have this page.',
+  'You are early. So are we.',
 ];

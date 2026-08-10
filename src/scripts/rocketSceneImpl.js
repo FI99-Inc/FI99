@@ -29,6 +29,13 @@ const MODEL_URL = '/models/rocket.glb';
 // never compose with each other the way two object-local rotations do.
 const BASE_YAW = THREE.MathUtils.degToRad(28);
 const REST_ROLL = THREE.MathUtils.degToRad(-22);
+// Mobile's resting tilt is much shallower than desktop's. Desktop's -22° Dutch
+// tilt works because the rocket has a wide box to lean across; mobile has
+// almost none (see the layout() comment below), so the same tilt reads as a
+// diagonal scratch cutting through the letters rather than a deliberate lean.
+// A near-vertical rest angle is what actually lets the stretched mobile shape
+// (see MOBILE_SCALE) read as a clean edge accent instead.
+const MOBILE_REST_ROLL = THREE.MathUtils.degToRad(-8);
 
 // Full turns over the mark's own scroll transit — several, not a fraction of
 // one, so this reads as tumbling rather than a clock hand.
@@ -92,14 +99,17 @@ export async function start(mount) {
   // drifting through the background reads as atmosphere, a small object
   // dead-centre reads as the thing you're supposed to look at.
   //
-  // Mobile gets its own numbers, not just a scaled-down desktop pose. The
-  // stacked FI/99 lockup runs left-aligned and close to full viewport width
-  // there (see .hero-mark's mobile rules in global.css) — only ~16px of
-  // margin on either side — so there is no true "beside the mark" position
-  // that isn't either clipped by the frustum edge or hidden behind the
-  // letters. This tucks it into the corner instead: the gap between the
-  // header and where FI starts, biased right, small enough to clear the
-  // top-right of the glyphs rather than sit behind them.
+  // Mobile gets its own numbers, not just a scaled-down desktop pose, and
+  // not a uniform scale either. The stacked FI/99 lockup runs left-aligned
+  // and close to full viewport width there (see .hero-mark's mobile rules
+  // in global.css) — only ~16px of margin on either side — so there is
+  // barely any horizontal room to sit "beside" it. There is, however, a lot
+  // of unused *vertical* room in the hero above the tagline. Stretching the
+  // rocket — narrow on X/Z, elongated on Y — trades the width it doesn't
+  // have for the height it does, so it reads as a tall accent running down
+  // the right edge instead of a diagonal streak forced through the letters.
+  // (Y stretches cleanly because BASE_YAW only rotates around Y — X/Z are
+  // what a yaw rotation mixes together, Y is untouched by it.)
   let mobile = null;
   let baseX = 0;
   let baseY = 0;
@@ -108,13 +118,15 @@ export async function start(mount) {
     if (isMobile === mobile) return;
     mobile = isMobile;
     if (mobile) {
-      root.scale.setScalar(0.65);
-      baseX = 0.4;
-      baseY = 1.0;
+      root.scale.set(0.4, 1.35, 0.4);
+      baseX = 0.95;
+      baseY = 0.65;
+      camera.rotation.z = MOBILE_REST_ROLL;
     } else {
       root.scale.setScalar(2.2);
       baseX = 0.9;
       baseY = -0.3;
+      camera.rotation.z = REST_ROLL;
     }
   }
 

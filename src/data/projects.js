@@ -5,6 +5,8 @@ import krineFeed from '../assets/work/krine-1.png';
 import krinePost from '../assets/work/krine-2.png';
 import plotonMap from '../assets/work/ploton-1.png';
 import plotonMethod from '../assets/work/ploton-2.png';
+import writeLibrary from '../assets/work/write-1.png';
+import writeEditor from '../assets/work/write-2.png';
 
 export const projects = [
   {
@@ -29,13 +31,25 @@ export const projects = [
     ],
   },
   {
+    // Omar's. Mid visual overhaul, so no shots yet — the row carries its
+    // link but stays typographic until there are screenshots worth showing.
+    slug: 'watts-left',
+    name: "Watt's Left",
+    oneLiner: 'EV range, predicted from physics instead of the last few kilometres.',
+    status: 'in the lab',
+    year: 2026,
+    tags: ['app'],
+    link: 'https://wattsleft.fi99.ca',
+    shots: [],
+  },
+  {
     slug: 'ploton',
     name: 'PlotON',
     oneLiner: 'Ontario cities, ranked by what you actually care about.',
     status: 'in the lab',
     year: 2026,
     tags: ['tool'],
-    link: 'https://ploton-zeta.vercel.app',
+    link: 'https://ploton.fi99.ca',
     shots: [
       {
         src: plotonMap,
@@ -46,6 +60,27 @@ export const projects = [
         src: plotonMethod,
         label: 'METHOD',
         alt: 'PlotON’s methodology page explaining the livability score, with the seven default category weights laid out in a grid.',
+      },
+    ],
+  },
+  {
+    slug: 'write',
+    name: 'WR!TE',
+    oneLiner: 'Poems and stories, scanned for rhyme and meter on your machine.',
+    status: 'shipped',
+    year: 2026,
+    tags: ['tool'],
+    link: 'https://write.fi99.ca',
+    shots: [
+      {
+        src: writeLibrary,
+        label: 'LIBRARY',
+        alt: 'WR!TE’s library: a searchable list of poems and stories, each row carrying its form, draft status, tags and date.',
+      },
+      {
+        src: writeEditor,
+        label: 'EDITOR',
+        alt: 'WR!TE’s editor on Shakespeare’s Sonnet 18, syllable counts down the left margin and rhyme-scheme letters down the right, beside a panel of rhymes for “day”.',
       },
     ],
   },

@@ -4,6 +4,7 @@ import { ClientRouter } from 'astro:transitions';
 import Multiline99 from '../components/Multiline99.astro';
 import Starfield from '../components/Starfield.astro';
 import StatusReadout from '../components/StatusReadout.astro';
+import SocialLinks from '../components/SocialLinks.astro';
 import displayFontUrl from '@fontsource-variable/unbounded/files/unbounded-latin-wght-normal.woff2?url';
 // The body and mono faces paint the first screen too (tagline, nav, section
 // rules), so they get the same treatment as the display face: preloaded
@@ -206,22 +207,17 @@ const year = new Date().getFullYear();
         <p class="border-b border-bone/20 px-4 py-4 tracking-widest text-bone/60 sm:border-b-0 sm:border-r sm:px-6">
           © {year} FI99 — WE CREATE THINGS.
         </p>
-        <!-- Instagram is the first account to actually exist (2026-08-09), so
-             the [ SOCIALS — SOON ] placeholder that stood here is spent. The
-             padding lives on the anchor, not this cell, so the tap target is
-             the whole 48px row rather than the width of the label. Further
-             accounts join as siblings — see the sm:justify-center. -->
-        <p class="flex min-h-12 items-center border-b border-bone/20 tracking-widest text-bone/60 sm:justify-center sm:border-b-0 sm:border-r">
-          <a
-            href="https://www.instagram.com/fi99inc/"
-            target="_blank"
-            rel="noopener"
-            data-scramble
-            class="flex min-h-12 items-center px-4 hover:text-bone focus-visible:text-bone sm:px-6"
-          >
-            INSTAGRAM @FI99INC
-          </a>
-        </p>
+        <!-- The [ SOCIALS — SOON ] placeholder that stood here is spent: the
+             accounts exist as of 2026-08-09. Icons rather than three mono
+             labels because three labels do not fit a third of a 320px row, and
+             no padding on this cell — each anchor carries its own, so the tap
+             target is the full 48px height by 48px wide rather than the 16px
+             glyph, and the first icon still lines up with the copyright text
+             above it. No `data-scramble` on these: it rewrites textContent,
+             which would delete the SVG. -->
+        <div class="flex min-h-12 items-stretch border-b border-bone/20 sm:justify-center sm:border-b-0 sm:border-r">
+          <SocialLinks />
+        </div>
         <p class="flex items-center px-4 py-4 tracking-widest text-bone/60 sm:justify-end sm:px-6">
           FI99.CA
         </p>

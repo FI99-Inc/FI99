@@ -293,6 +293,21 @@
   .shot:focus-within .shot-frame::after {
     opacity: 0;
   }
+
+  /* The lab rows hold their preview inside the link, so the row is the hover
+     target rather than the thumbnail: pointing anywhere along a row switches
+     that screen on at the same moment the row itself inverts. One gesture,
+     one response — aiming at a 176px thumbnail to light it would make the
+     preview a separate thing to hit. */
+  .row-link:hover .shot-img,
+  .row-link:focus-visible .shot-img {
+    filter: none;
+  }
+
+  .row-link:hover .shot-frame::after,
+  .row-link:focus-visible .shot-frame::after {
+    opacity: 0;
+  }
 }
 
 /* ---- Founder portraits ----
@@ -750,6 +765,53 @@ html.cursor-on .fi-cursor {
   .arrow-run-r {
     display: none;
   }
+}
+
+/* ---- Footer socials ----
+   Three monochrome glyphs at rest, each taking one stop of the brand ramp on
+   hover, in the ramp's own order. Reusing the ramp is what makes them read as
+   one set rather than three borrowed logos — and it is the whole reason the
+   marks were stripped of their own colours in SocialLinks.astro.
+
+   Written here rather than as `hover:text-magenta` utilities because the tint
+   is per-position: an nth-child rule keeps the ramp in the markup's order and
+   survives adding a fourth account without touching every anchor. */
+
+.social-links a {
+  transition: color 200ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .social-links a {
+    transition: none;
+  }
+}
+
+@media (hover: hover) {
+  .social-links a:hover {
+    color: var(--color-magenta);
+  }
+  .social-links li:nth-child(2) a:hover {
+    color: var(--color-violet);
+  }
+  .social-links li:nth-child(3) a:hover {
+    color: var(--color-volt);
+  }
+}
+
+/* Touch never resolves the hover above, and keyboards never resolve either, so
+   both get the same tint from their own state. */
+.social-links a:active,
+.social-links a:focus-visible {
+  color: var(--color-magenta);
+}
+.social-links li:nth-child(2) a:active,
+.social-links li:nth-child(2) a:focus-visible {
+  color: var(--color-violet);
+}
+.social-links li:nth-child(3) a:active,
+.social-links li:nth-child(3) a:focus-visible {
+  color: var(--color-volt);
 }
 
 /* ---- 404 glitch ---- */

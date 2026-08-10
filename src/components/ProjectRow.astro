@@ -8,14 +8,25 @@ const { project, shots = false } = Astro.props;
 
 const hasShots = shots && project.shots && project.shots.length > 0;
 
+// The compact rows carry one thumbnail where /work carries the full pair —
+// showing both would say the same thing twice. The slot is reserved whether
+// or not there is an image for it, so a project still waiting on screenshots
+// leaves a gap in the column rather than shunting the rest of the row left.
+const previewSlot = !shots;
+const preview = previewSlot && project.shots?.length ? project.shots[0] : null;
+
 // The row sets every name in caps, which flattens how the names are actually
 // written. Splitting into same-case runs lets the originally-lowercase ones
 // render a notch smaller: KRINE keeps its capital K, PlotON keeps its ON.
+// Apostrophes, spaces and digits have no case to read, so they join whatever
+// run they land in rather than counting as capitals — otherwise Watt's Left
+// spikes its apostrophe to full height between two smaller letters.
 const nameRuns = [...project.name].reduce((runs, char) => {
-  const small = char !== char.toUpperCase();
+  const cased = char.toLowerCase() !== char.toUpperCase();
+  const small = cased ? char !== char.toUpperCase() : null;
   const last = runs[runs.length - 1];
-  if (last && last.small === small) last.text += char;
-  else runs.push({ small, text: char });
+  if (last && (small === null || last.small === small)) last.text += char;
+  else runs.push({ small: small === true, text: char });
   return runs;
 }, []);
 
@@ -29,7 +40,12 @@ const linkAttrs = isLink
 <li class="border-t border-bone/20" data-reveal>
   <Tag
     {...linkAttrs}
-    class="group grid grid-cols-1 items-baseline gap-x-4 gap-y-2 px-4 py-6 transition-colors hover:bg-bone hover:text-void active:bg-bone active:text-void sm:grid-cols-[5fr_4fr_3fr] sm:px-6 sm:py-8"
+    class:list={[
+      'row-link group grid grid-cols-1 items-baseline gap-x-4 gap-y-2 px-4 py-6 transition-colors hover:bg-bone hover:text-void active:bg-bone active:text-void sm:px-6 sm:py-8',
+      previewSlot
+        ? 'sm:grid-cols-[minmax(0,3fr)_11rem_minmax(0,4fr)_minmax(0,3fr)]'
+        : 'sm:grid-cols-[5fr_4fr_3fr]',
+    ]}
   >
     <h3
       class="font-display text-2xl font-extrabold uppercase leading-none tracking-tight sm:text-4xl"
@@ -40,13 +56,44 @@ const linkAttrs = isLink
         )
       }
     </h3>
-    <p class="text-sm text-bone/70 group-hover:text-void/80 group-active:text-void/80 sm:col-start-2 sm:text-base">
+    {
+      previewSlot && (
+        <div class="hidden self-center sm:col-start-2 sm:block">
+          {/* The box keeps its height with or without an image, so a project
+              still waiting on screenshots sits at the same row height as the
+              rest instead of collapsing and breaking the column's rhythm. */}
+          <div class="aspect-[1845/1026]">
+            {preview && (
+              <div class="shot-frame h-full border border-bone/20 transition-colors group-hover:border-void/25 group-active:border-void/25">
+                <Image
+                  src={preview.src}
+                  alt=""
+                  widths={[176, 352]}
+                  sizes="11rem"
+                  class="shot-img block h-full w-full object-cover"
+                  loading="lazy"
+                />
+              </div>
+            )}
+          </div>
+        </div>
+      )
+    }
+    <p
+      class:list={[
+        'text-sm text-bone/70 group-hover:text-void/80 group-active:text-void/80 sm:text-base',
+        previewSlot ? 'sm:col-start-3' : 'sm:col-start-2',
+      ]}
+    >
       {project.oneLiner}
     </p>
     <!-- flex-wrap over inline text: at 360px the meta used to break mid-token
          and strand the ↗ alone on its own line. -->
     <p
-      class="flex flex-wrap items-baseline gap-x-2 font-mono text-[11px] tracking-[0.15em] sm:col-start-3 sm:justify-end sm:text-right"
+      class:list={[
+        'flex flex-wrap items-baseline gap-x-2 font-mono text-[11px] tracking-[0.15em] sm:justify-end sm:text-right',
+        previewSlot ? 'sm:col-start-4' : 'sm:col-start-3',
+      ]}
     >
       <span
         class:list={[

@@ -18,6 +18,12 @@ const selected = projects.slice(0, 3);
 >
   <!-- Hero -->
   <section class="hero flex min-h-[calc(100svh-3.1rem)] flex-col justify-between border-b border-bone/20 px-4 pb-6 pt-8 sm:px-6 sm:pt-12">
+    <!-- A faint 3D rocket behind the whole hero, not just the mark — it needs
+         room to sit big and diagonal without being confined to the mark's own
+         box. Mounted by scripts/rocketScene.js; see that file for why the
+         heavy three.js code lives in a separately-imported module instead of
+         here. -->
+    <div class="hero-rocket-scene pointer-events-none absolute inset-0" data-rocket-scene aria-hidden="true"></div>
     <h1 class="sr-only">FI99 — We create things.</h1>
     <!-- On phones the mark and the tagline read as one block with the strip
          pinned to the bottom; `sm:contents` dissolves this wrapper so wide

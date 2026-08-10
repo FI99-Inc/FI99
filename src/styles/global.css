@@ -512,6 +512,36 @@ html.motion .ml99-draw .ml99-path {
   }
 }
 
+/* ---- Hero rocket ----
+   `.hero` (not .hero-mark — this needs room to sit big and diagonal, not be
+   boxed to the mark's own row) gets position: relative here so the scene
+   layer's z-index: -1 stays sandwiched between the void background and the
+   hero's own content instead of racing the starfield's z-index at the page
+   level. The scene itself (WebGL canvas, scripts/rocketScene.js) supplies
+   its own rotation live — faintness is the one thing worth fixing in CSS
+   rather than material properties, since it is just as easy here and one
+   fewer thing for the WebGL code to think about.
+
+   Opacity is higher than a filled model would need — a wireframe's lines
+   cover a fraction of the pixels a solid silhouette would, so the same
+   "faint" read takes more alpha per line to land. */
+.hero {
+  position: relative;
+  z-index: 0;
+}
+
+.hero-rocket-scene {
+  z-index: -1;
+}
+
+.hero-rocket-scene canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  opacity: 0.32;
+  filter: grayscale(1);
+}
+
 /* ---- Hero word cycle ----
    The last word of "We create things." is swapped on a loop by
    scripts/wordcycle.js, which fills .hero-word with one mask per character.

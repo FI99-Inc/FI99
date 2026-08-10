@@ -29,13 +29,13 @@ const MODEL_URL = '/models/rocket.glb';
 // never compose with each other the way two object-local rotations do.
 const BASE_YAW = THREE.MathUtils.degToRad(28);
 const REST_ROLL = THREE.MathUtils.degToRad(-22);
-// Mobile's resting tilt is much shallower than desktop's. Desktop's -22° Dutch
-// tilt works because the rocket has a wide box to lean across; mobile has
-// almost none (see the layout() comment below), so the same tilt reads as a
-// diagonal scratch cutting through the letters rather than a deliberate lean.
-// A near-vertical rest angle is what actually lets the stretched mobile shape
-// (see MOBILE_SCALE) read as a clean edge accent instead.
-const MOBILE_REST_ROLL = THREE.MathUtils.degToRad(-8);
+// Mobile gets no Dutch tilt at all, unlike desktop's -22°. Desktop's lean
+// works because the rocket has a wide box to lean across; mobile has almost
+// none (see the layout() comment below), so any tilt on the stretched,
+// edge-hugging mobile shape reads as a diagonal scratch through the letters
+// instead of a deliberate lean. Dead straight is what makes it read as a
+// parallel accent running alongside FI99's own vertical strokes.
+const MOBILE_REST_ROLL = 0;
 
 // Full turns over the mark's own scroll transit — several, not a fraction of
 // one, so this reads as tumbling rather than a clock hand.

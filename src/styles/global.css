@@ -491,11 +491,16 @@ html.motion .ml99-draw .ml99-path {
 /* Phones stack the lockup — FI over 99 — so the mark can run the full column
    instead of splitting a 390px screen in half and leaving the hero mostly
    empty. 1.11 is "FI"'s width-to-font-size ratio in Unbounded Black, which
-   is what keeps the two rows the same width; the svh term caps the stack on
-   short and landscape viewports so it never outgrows the hero. */
+   is what keeps the two rows the same width; the height term caps the stack
+   on short and landscape viewports so it never outgrows the hero. That term
+   reads off --vh100 (Base.astro's inline head script), not svh directly —
+   on phones where the height cap is the binding constraint (tall, narrow
+   screens), a raw svh term visibly grew the mark a few percent whenever the
+   browser's own address bar collapsed mid-scroll. --vh100 is frozen against
+   exactly that. */
 @media (width < 40rem) {
   .hero-mark {
-    --fi: min(calc((100vw - 2rem) / 1.11), 36svh);
+    --fi: min(calc((100vw - 2rem) / 1.11), calc(var(--vh100, 1svh) * 36));
     flex-direction: column;
     align-items: flex-start;
     gap: 0.5rem;

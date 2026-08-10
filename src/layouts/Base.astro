@@ -102,6 +102,37 @@ const year = new Date().getFullYear();
         });
       })();
     </script>
+    <script is:inline>
+      // Mobile browsers fire a `resize` event when their own chrome (address
+      // bar, tab strip) slides away during a scroll, even though nothing
+      // about the page's actual layout changed — the chrome was only ever
+      // covering part of the same fixed device height. Anything sized off a
+      // live `*vh`/`*svh` unit re-measures against that changed number
+      // anyway, which is what makes elements keyed to one visibly grow or
+      // shrink a few percent mid-scroll. --vh100 is measured once per *real*
+      // viewport change — a change in width, since chrome show/hide never
+      // touches that — and frozen otherwise, so anything keyed to it (see
+      // .hero-mark's --fi and .hero's min-height in global.css) doesn't
+      // react to the chrome.
+      (function () {
+        var root = document.documentElement;
+        var lastWidth = window.innerWidth;
+        function measure() {
+          root.style.setProperty('--vh100', window.innerHeight / 100 + 'px');
+        }
+        measure();
+        window.addEventListener('resize', function () {
+          if (window.innerWidth === lastWidth) return;
+          lastWidth = window.innerWidth;
+          measure();
+        });
+        // A swap overwrites <html>'s inline style along with its class list
+        // (see the motion script's astro:after-swap handler for the same
+        // gotcha), so the property needs restamping, not just the listener
+        // staying alive.
+        document.addEventListener('astro:after-swap', measure);
+      })();
+    </script>
     <ClientRouter />
     <slot name="head" />
   </head>

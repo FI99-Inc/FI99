@@ -118,9 +118,9 @@ export async function start(mount) {
     if (isMobile === mobile) return;
     mobile = isMobile;
     if (mobile) {
-      root.scale.set(0.4, 1.35, 0.4);
-      baseX = 0.95;
-      baseY = 0.65;
+      root.scale.set(0.65, 1.5, 0.55);
+      baseX = 0.6;
+      baseY = 0.55;
       camera.rotation.z = MOBILE_REST_ROLL;
     } else {
       root.scale.setScalar(2.2);
@@ -149,13 +149,14 @@ export async function start(mount) {
   let rollCurrent = REST_ROLL;
 
   // A second, slower-eased layer on top of the clock hand: the rocket also
-  // drifts a little toward the cursor, like it's tethered to the pivot
-  // rather than just spinning in place. Rotation alone reads as a dial;
-  // rotation plus a lagging translation reads as something the cursor is
-  // actually pulling on. Deliberately small (DRIFT_MAX) and deliberately
-  // slower than the roll (see the two `k` constants in render()) — the
-  // drift should trail the turn, not race it.
-  const DRIFT_MAX = 0.55;
+  // drifts toward the cursor, like it's tethered to the pivot rather than
+  // just spinning in place. Rotation alone reads as a dial; rotation plus a
+  // lagging translation reads as something the cursor is actually pulling
+  // on. Large enough that the nose gets genuinely close to the cursor
+  // itself across most of the mount, not just a token nudge in its
+  // direction — and still deliberately slower than the roll (see the two
+  // `k` constants in render()) so the drift trails the turn, not races it.
+  const DRIFT_MAX = 1.3;
   let driftTargetX = 0;
   let driftTargetY = 0;
   let driftCurrentX = 0;
@@ -178,6 +179,77 @@ export async function start(mount) {
     driftTargetY = -(dy / dist) * pull;
   };
   if (finePointer) window.addEventListener('pointermove', onPointerMove, { passive: true });
+
+  // Sparkle/flame trail: small brand-colored points spawned from the tail
+  // (the end opposite the nose — local -Y, mirroring the "+Y nose axis" the
+  // pointer math above is built around) whenever the rocket's actual
+  // rendered position moves, so a fast cursor sweep leaves a proper trail
+  // rather than a static glow sitting under it.
+  const PARTICLE_COUNT = 160;
+  const particlePositions = new Float32Array(PARTICLE_COUNT * 3);
+  const particleBaseColor = new Float32Array(PARTICLE_COUNT * 3);
+  const particleColors = new Float32Array(PARTICLE_COUNT * 3);
+  const particleLife = new Float32Array(PARTICLE_COUNT);
+  const particleMaxLife = new Float32Array(PARTICLE_COUNT);
+  const particleVelX = new Float32Array(PARTICLE_COUNT);
+  const particleVelY = new Float32Array(PARTICLE_COUNT);
+  let particleCursor = 0;
+  const particleGeometry = new THREE.BufferGeometry();
+  particleGeometry.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
+  particleGeometry.setAttribute('color', new THREE.BufferAttribute(particleColors, 3));
+  const particles = new THREE.Points(
+    particleGeometry,
+    new THREE.PointsMaterial({
+      size: 0.05,
+      vertexColors: true,
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+      sizeAttenuation: true,
+    })
+  );
+  // World space, not a child of root: once emitted a spark drifts on its own
+  // and stays behind as the rocket keeps moving, which is what makes it read
+  // as a trail rather than glow glued to the model.
+  scene.add(particles);
+
+  // FI99's own three-stop brand ramp (--color-magenta/violet/volt in
+  // global.css), not literal fire colours: the rocket itself is a
+  // deliberately neutral bone-white wireframe to keep the schematic look, so
+  // orange/yellow sparks would be the first saturated colour anywhere near
+  // it — fighting the ramp used everywhere else on the page instead of
+  // reading as part of the same system.
+  const SPARK_COLORS = [
+    [1, 0.122, 0.561],
+    [0.545, 0.169, 1],
+    [0.29, 0.145, 1],
+  ];
+
+  function spawnSpark(x, y, z) {
+    const i = particleCursor;
+    particleCursor = (particleCursor + 1) % PARTICLE_COUNT;
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 0.25 + Math.random() * 0.5;
+    particleVelX[i] = Math.cos(angle) * speed;
+    // Slight downward bias — falling sparks, not an even puff in all
+    // directions.
+    particleVelY[i] = Math.sin(angle) * speed - 0.15;
+    particleMaxLife[i] = 0.35 + Math.random() * 0.35;
+    particleLife[i] = particleMaxLife[i];
+    const idx = i * 3;
+    particlePositions[idx] = x;
+    particlePositions[idx + 1] = y;
+    particlePositions[idx + 2] = z + (Math.random() - 0.5) * 0.2;
+    const c = SPARK_COLORS[(Math.random() * SPARK_COLORS.length) | 0];
+    particleBaseColor[idx] = c[0];
+    particleBaseColor[idx + 1] = c[1];
+    particleBaseColor[idx + 2] = c[2];
+  }
+
+  const TAIL_LOCAL = new THREE.Vector3(0, -1, 0);
+  const tailWorld = new THREE.Vector3();
+  const prevTailWorld = new THREE.Vector3();
+  let tailTracked = false;
 
   let spinProgress = 0;
   // Triggered off .hero-mark, not .hero: the mark sits in the upper part of
@@ -215,8 +287,20 @@ export async function start(mount) {
     layout();
     updatePivot();
   }
+  // A plain window `resize` listener has a real race: if it fires once
+  // before web fonts finish loading, the mount hasn't reached its final
+  // size yet (the FI/99 lockup's own size depends on the display font
+  // loading), so the camera's aspect gets locked to that stale, too-small
+  // measurement for the rest of the session — the rocket then renders
+  // visibly mis-proportioned, with real risk of parts of it landing outside
+  // the frustum. A slow phone connection loading fonts over the network
+  // (rather than an instant localhost dev server) makes this far more likely
+  // to actually hit. ResizeObserver fires on every real size change of the
+  // mount itself, for any reason — a font-load reflow included — so there's
+  // no timing to get right.
+  const resizeObserver = new ResizeObserver(resize);
+  resizeObserver.observe(mount);
   resize();
-  window.addEventListener('resize', resize);
 
   // Shortest angular path, so crossing the ±180° seam eases through it
   // instead of spinning the long way around.
@@ -242,6 +326,57 @@ export async function start(mount) {
     root.position.set(baseX + driftCurrentX, baseY + driftCurrentY, 0);
     root.rotation.y = BASE_YAW + spinProgress * Math.PI * 2 * SPIN_TURNS;
 
+    if (finePointer) {
+      root.updateMatrixWorld(true);
+      tailWorld.copy(TAIL_LOCAL).applyMatrix4(root.matrixWorld);
+      if (tailTracked) {
+        const moved = tailWorld.distanceTo(prevTailWorld);
+        // A movement floor keeps the trail from spawning every frame at
+        // rest — only actual travel (cursor-driven drift/roll, or the
+        // scroll tumble) leaves sparks behind.
+        if (moved > 0.003) {
+          const count = Math.min(5, Math.ceil(moved * 60));
+          for (let i = 0; i < count; i++) {
+            const t = (i + 1) / count;
+            spawnSpark(
+              THREE.MathUtils.lerp(prevTailWorld.x, tailWorld.x, t),
+              THREE.MathUtils.lerp(prevTailWorld.y, tailWorld.y, t),
+              THREE.MathUtils.lerp(prevTailWorld.z, tailWorld.z, t)
+            );
+          }
+        }
+      }
+      prevTailWorld.copy(tailWorld);
+      tailTracked = true;
+    }
+
+    const dt = deltaTime / 1000;
+    let anyAlive = false;
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+      if (particleLife[i] <= 0) continue;
+      anyAlive = true;
+      particleLife[i] -= dt;
+      const idx = i * 3;
+      if (particleLife[i] <= 0) {
+        particleColors[idx] = particleColors[idx + 1] = particleColors[idx + 2] = 0;
+        continue;
+      }
+      particlePositions[idx] += particleVelX[i] * dt;
+      particlePositions[idx + 1] += particleVelY[i] * dt;
+      // Squared fade (ease-out): sparks hold their brightness through most
+      // of their life and only dim sharply at the very end, closer to how a
+      // real spark reads than a linear fade would.
+      const t = particleLife[i] / particleMaxLife[i];
+      const brightness = t * t;
+      particleColors[idx] = particleBaseColor[idx] * brightness;
+      particleColors[idx + 1] = particleBaseColor[idx + 1] * brightness;
+      particleColors[idx + 2] = particleBaseColor[idx + 2] * brightness;
+    }
+    if (anyAlive) {
+      particleGeometry.attributes.position.needsUpdate = true;
+      particleGeometry.attributes.color.needsUpdate = true;
+    }
+
     renderer.render(scene, camera);
   }
 
@@ -249,7 +384,7 @@ export async function start(mount) {
 
   return function dispose() {
     gsap.ticker.remove(render);
-    window.removeEventListener('resize', resize);
+    resizeObserver.disconnect();
     if (finePointer) window.removeEventListener('pointermove', onPointerMove);
     scrollTrigger?.kill();
     scene.traverse((obj) => {

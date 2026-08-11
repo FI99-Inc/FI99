@@ -529,7 +529,14 @@ html.motion .ml99-draw .ml99-path {
 
    Opacity is higher than a filled model would need — a wireframe's lines
    cover a fraction of the pixels a solid silhouette would, so the same
-   "faint" read takes more alpha per line to land. */
+   "faint" read takes more alpha per line to land.
+
+   No grayscale filter any more: it used to sit here because the wireframe's
+   own colour (a near-neutral bone) barely needed it anyway, but a CSS
+   filter applies to everything drawn into the canvas, and once the cursor
+   trail added brand-coloured particles (see rocketSceneImpl.js) it was
+   silently desaturating those to grey too — killing the one part of the
+   scene that's actually supposed to be colourful. */
 .hero {
   position: relative;
   z-index: 0;
@@ -544,7 +551,6 @@ html.motion .ml99-draw .ml99-path {
   width: 100%;
   height: 100%;
   opacity: 0.32;
-  filter: grayscale(1);
 }
 
 /* ---- Hero word cycle ----

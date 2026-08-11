@@ -15,9 +15,9 @@ export const opening = {
   admission: 'So are we.',
   body: [
     "Everything you'd call living, you got by walking toward someone who could have said no.",
-    "We build things, so we spend our days deciding how much of that walk to leave in. We wrote this down before we had anything substantial to point at, so you can hold us to it later.",
-    'We wrote it for three people.',
-    "The dreamer has renewed the same domain for six years and still opens the file on the subway ride home. The non-believer sat through the prototype, watched it break in the second minute, and clapped along with the room. The defector gets a strong review every cycle for work they can't describe at dinner. You have more in common than you'd admit. Each of you looked at the room you were handed and found it too small.",
+    "We are builders, so we spend our time deciding how much of that walk to leave in. Asking your crush out, applying for your dream job across the country, speaking up when you could've chosen silence. We wrote this down before we had anything substantial to point at, so you can hold us to it later.",
+    'We had three people in mind when we wrote this.',
+    "The dreamer has renewed the same domain for six years and still opens the file on the subway ride home. The non-believer sat through the prototype, watched it break in the second minute, and clapped along with the room. The defector gets a strong review every cycle for work they can't describe at dinner. You have more in common than you'd admit. Each of you looked at the room you were handed and found it too suffocating.",
   ],
 };
 
@@ -41,7 +41,7 @@ export const principles = [
   },
   {
     statement: 'We argue, and we keep the arguments.',
-    body: "The three of us met as kids, years before we had a company or a reason. Actually, we disagree about most of what we build, and the work improves in the gap between us. You narrow when nothing pushes back. So does a company, and so does a country. We'd rather lose an argument in this room than ship a thing none of us doubted.",
+    body: "The three of us met as kids, years before we had a company or a reason. Actually, we disagree about most of what we build, and the work improves in the gap between us. You narrow when nothing pushes back. So does a company, so does a country, and so does a friendship. We'd rather lose an argument in this room than ship a thing none of us even doubted.",
   },
 ];
 

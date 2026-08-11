@@ -523,20 +523,19 @@ html.motion .ml99-draw .ml99-path {
    layer's z-index: -1 stays sandwiched between the void background and the
    hero's own content instead of racing the starfield's z-index at the page
    level. The scene itself (WebGL canvas, scripts/rocketScene.js) supplies
-   its own rotation live — faintness is the one thing worth fixing in CSS
-   rather than material properties, since it is just as easy here and one
-   fewer thing for the WebGL code to think about.
+   its own rotation live.
 
-   Opacity is higher than a filled model would need — a wireframe's lines
-   cover a fraction of the pixels a solid silhouette would, so the same
-   "faint" read takes more alpha per line to land.
-
-   No grayscale filter any more: it used to sit here because the wireframe's
-   own colour (a near-neutral bone) barely needed it anyway, but a CSS
-   filter applies to everything drawn into the canvas, and once the cursor
-   trail added brand-coloured particles (see rocketSceneImpl.js) it was
-   silently desaturating those to grey too — killing the one part of the
-   scene that's actually supposed to be colourful. */
+   Nothing dims or desaturates this canvas from here any more, and that is
+   deliberate. A `filter: grayscale(1)` and an `opacity: 0.32` both used to
+   sit on this rule to keep the wireframe faint, and both are the same blunt
+   instrument: a CSS filter or opacity applies to *everything* drawn into
+   the canvas. Once the scene grew brand-coloured particles — the cursor
+   trail on desktop, the scroll-driven exhaust on mobile — the filter was
+   silently flattening them to grey and the opacity was capping them at 32%
+   alpha, which turns hot magenta into muddy maroon. Those particles are the
+   one part of this scene that is meant to be vivid. The wireframe's own
+   faintness lives on its material instead (WIREFRAME_OPACITY in
+   rocketSceneImpl.js), which dims the lines and leaves the sparks alone. */
 .hero {
   position: relative;
   z-index: 0;
@@ -550,7 +549,6 @@ html.motion .ml99-draw .ml99-path {
   display: block;
   width: 100%;
   height: 100%;
-  opacity: 0.32;
 }
 
 /* ---- Hero word cycle ----

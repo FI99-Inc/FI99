@@ -43,6 +43,50 @@ const SPIN_TURNS = 2.5;
 
 const MOBILE_QUERY = '(width < 40rem)';
 
+// Higher than a filled model would need — a wireframe's lines cover a
+// fraction of the pixels a solid silhouette would, so the same "faint" read
+// takes more alpha per line to land. Lower than the 0.32 the old canvas-wide
+// CSS opacity used, though, and not for taste: fading each line individually
+// lets overlapping lines stack their alpha, where compositing the finished
+// canvas once could not. Sampling the rocket's own column against the old
+// rule, 0.28 per line lands within a few percent of its mean luminance.
+const WIREFRAME_OPACITY = 0.28;
+
+// ---- Mobile-only motion ----
+// A phone gets none of the three live layers desktop drives off the cursor
+// (clock-hand roll, lagging drift, spark trail) — all three sit behind
+// `finePointer`. And the trail could not work on a phone even with the gate
+// removed: it spawns off the tail's *world* movement, but the tail sits on
+// local Y, the one axis the mobile pose never moves it along. A Y rotation
+// leaves points on the Y axis exactly where they are, and without a cursor
+// there is no drift either, so that position is constant. Mobile needs its
+// own driver, not a relaxed gate.
+//
+// Scroll velocity is that driver, and it is the one rich input a phone has
+// that a desktop mostly does not. smoothscroll.js deliberately leaves touch
+// momentum to the platform (`syncTouch: false`), so a flick hands us a
+// velocity that decays on its own over a second or more — the rocket burns
+// hard off the gesture and then settles, which is the phone answering the
+// hand rather than ignoring it.
+const MOBILE_BURN_SPEED = 2200; // px/s of scroll that reads as full throttle
+const MOBILE_IDLE_RATE = 24; // sparks/sec at rest — the engine is never out
+const MOBILE_BURN_RATE = 320; // sparks/sec at full throttle
+const MOBILE_PLUME_SPREAD = 0.85; // radians of exhaust cone at full throttle
+const MOBILE_SPARK_SIZE = 0.075; // world units, before the throttle grows it
+const DESKTOP_SPARK_SIZE = 0.05; // the desktop pose is ~5x larger, so smaller
+// Thrust should visibly do something, so a hard burn also lifts the rocket a
+// little. Small: this is still background, and the lockup is what the eye is
+// supposed to land on.
+const MOBILE_CLIMB = 0.16;
+// At rest all of the above goes quiet and the rocket would be a still image
+// again, so a slow sway and bob keep it breathing underneath. The sway lives
+// on the camera for exactly the reason REST_ROLL does — see BASE_YAW's
+// comment on why rolling the rocket's own already-yawed axis wrecks it.
+const MOBILE_SWAY = THREE.MathUtils.degToRad(1.6);
+const MOBILE_SWAY_RATE = 0.34;
+const MOBILE_BOB = 0.055;
+const MOBILE_BOB_RATE = 0.47;
+
 export async function start(mount) {
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 100);
@@ -76,7 +120,19 @@ export async function start(mount) {
       const edges = new THREE.EdgesGeometry(obj.geometry, 15);
       const lines = new THREE.LineSegments(
         edges,
-        new THREE.LineBasicMaterial({ color: 0xf2efe9 })
+        // Faintness lives on the material, not on the canvas. A CSS opacity
+        // on .hero-rocket-scene used to do this, but it is the same blunt
+        // instrument the grayscale filter was (see global.css): it fades
+        // *everything* drawn into the canvas uniformly, which caps the
+        // exhaust at 32% alpha and leaves hot magenta reading as muddy
+        // maroon. Dimming the wireframe here instead leaves the sparks free
+        // to burn at full strength — they are the one part of this scene
+        // that is meant to be vivid.
+        new THREE.LineBasicMaterial({
+          color: 0xf2efe9,
+          transparent: true,
+          opacity: WIREFRAME_OPACITY,
+        })
       );
       lines.position.copy(obj.position);
       lines.rotation.copy(obj.rotation);
@@ -132,11 +188,17 @@ export async function start(mount) {
       baseX = 0.98;
       baseY = 0.5;
       camera.rotation.z = MOBILE_REST_ROLL;
+      // Chunkier points than the desktop trail: the mobile rocket is drawn
+      // much smaller, so sparks sized for the desktop pose land near a single
+      // pixel here and the plume reads as grain instead of fire. render()
+      // grows this further with the throttle.
+      particles.material.size = MOBILE_SPARK_SIZE;
     } else {
       root.scale.setScalar(2.2);
       baseX = 0.9;
       baseY = -0.3;
       camera.rotation.z = REST_ROLL;
+      particles.material.size = DESKTOP_SPARK_SIZE;
     }
   }
 
@@ -190,12 +252,21 @@ export async function start(mount) {
   };
   if (finePointer) window.addEventListener('pointermove', onPointerMove, { passive: true });
 
-  // Sparkle/flame trail: small brand-colored points spawned from the tail
-  // (the end opposite the nose — local -Y, mirroring the "+Y nose axis" the
-  // pointer math above is built around) whenever the rocket's actual
-  // rendered position moves, so a fast cursor sweep leaves a proper trail
-  // rather than a static glow sitting under it.
-  const PARTICLE_COUNT = 160;
+  // Small brand-coloured points spawned from the tail (the end opposite the
+  // nose — local -Y, mirroring the "+Y nose axis" the pointer math above is
+  // built around). One buffer, two very different emitters feeding it: on
+  // desktop a sparkle trail shed whenever the rocket's rendered position
+  // moves, so a fast cursor sweep leaves a proper trail rather than a static
+  // glow sitting under it; on a phone a scroll-driven engine plume, since
+  // there is no cursor to shed anything (see the mobile constants at the top
+  // of the file).
+  //
+  // Sized for the mobile plume, which is the heavier of the two consumers:
+  // MOBILE_BURN_RATE across the longest lifetime is ~230 alive at full
+  // throttle, and the buffer wants headroom past that so a sustained burn
+  // recycles sparks that have already faded out rather than visibly erasing
+  // live ones at the head of the ring.
+  const PARTICLE_COUNT = 420;
   const particlePositions = new Float32Array(PARTICLE_COUNT * 3);
   const particleBaseColor = new Float32Array(PARTICLE_COUNT * 3);
   const particleColors = new Float32Array(PARTICLE_COUNT * 3);
@@ -207,10 +278,28 @@ export async function start(mount) {
   const particleGeometry = new THREE.BufferGeometry();
   particleGeometry.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
   particleGeometry.setAttribute('color', new THREE.BufferAttribute(particleColors, 3));
+  // A bare THREE.Points draws every particle as a hard square, which at the
+  // sizes the exhaust needs reads as blocky pixels rather than embers. A
+  // generated radial falloff (no network request, no asset to ship) turns
+  // each one into a soft dot that stacks into a glow under additive
+  // blending — white here because vertexColors multiplies the brand colour
+  // in per particle.
+  const sparkCanvas = document.createElement('canvas');
+  sparkCanvas.width = sparkCanvas.height = 64;
+  const sparkCtx = sparkCanvas.getContext('2d');
+  const sparkGradient = sparkCtx.createRadialGradient(32, 32, 0, 32, 32, 32);
+  sparkGradient.addColorStop(0, 'rgba(255,255,255,1)');
+  sparkGradient.addColorStop(0.3, 'rgba(255,255,255,0.6)');
+  sparkGradient.addColorStop(1, 'rgba(255,255,255,0)');
+  sparkCtx.fillStyle = sparkGradient;
+  sparkCtx.fillRect(0, 0, 64, 64);
+  const sparkTexture = new THREE.CanvasTexture(sparkCanvas);
+
   const particles = new THREE.Points(
     particleGeometry,
     new THREE.PointsMaterial({
-      size: 0.05,
+      size: DESKTOP_SPARK_SIZE,
+      map: sparkTexture,
       vertexColors: true,
       transparent: true,
       depthWrite: false,
@@ -235,17 +324,15 @@ export async function start(mount) {
     [0.29, 0.145, 1],
   ];
 
-  function spawnSpark(x, y, z) {
+  // Both emitters share one ring buffer, so a spark is a spark whichever
+  // input produced it — only the direction, speed and lifetime differ.
+  function emit(x, y, z, vx, vy, life) {
     const i = particleCursor;
     particleCursor = (particleCursor + 1) % PARTICLE_COUNT;
-    const angle = Math.random() * Math.PI * 2;
-    const speed = 0.25 + Math.random() * 0.5;
-    particleVelX[i] = Math.cos(angle) * speed;
-    // Slight downward bias — falling sparks, not an even puff in all
-    // directions.
-    particleVelY[i] = Math.sin(angle) * speed - 0.15;
-    particleMaxLife[i] = 0.35 + Math.random() * 0.35;
-    particleLife[i] = particleMaxLife[i];
+    particleVelX[i] = vx;
+    particleVelY[i] = vy;
+    particleMaxLife[i] = life;
+    particleLife[i] = life;
     const idx = i * 3;
     particlePositions[idx] = x;
     particlePositions[idx + 1] = y;
@@ -256,10 +343,54 @@ export async function start(mount) {
     particleBaseColor[idx + 2] = c[2];
   }
 
+  // Desktop: an even puff in every direction, because what spawns it is the
+  // rocket being dragged sideways by a cursor rather than anything firing.
+  function spawnSpark(x, y, z) {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 0.25 + Math.random() * 0.5;
+    emit(
+      x,
+      y,
+      z,
+      Math.cos(angle) * speed,
+      // Slight downward bias — falling sparks, not an even puff in all
+      // directions.
+      Math.sin(angle) * speed - 0.15,
+      0.35 + Math.random() * 0.35
+    );
+  }
+
+  // Mobile: a cone pointing straight down instead, because this one *is* an
+  // engine. The cone widens and the sparks leave faster the harder the burn,
+  // so throttle reads as shape and not just as count — a hard flick throws a
+  // broad fast plume, an idle tick drops a couple of embers straight down.
+  function spawnExhaust(x, y, z, burn) {
+    const angle = -Math.PI / 2 + (Math.random() - 0.5) * MOBILE_PLUME_SPREAD * (0.45 + burn);
+    const speed = (0.6 + Math.random() * 0.7) * (0.5 + burn * 2.2);
+    emit(
+      x + (Math.random() - 0.5) * 0.07,
+      y,
+      z,
+      Math.cos(angle) * speed,
+      Math.sin(angle) * speed,
+      0.32 + Math.random() * 0.4
+    );
+  }
+
   const TAIL_LOCAL = new THREE.Vector3(0, -1, 0);
   const tailWorld = new THREE.Vector3();
   const prevTailWorld = new THREE.Vector3();
   let tailTracked = false;
+
+  // Mobile throttle state. Read off raw window.scrollY rather than a Lenis or
+  // ScrollTrigger velocity: getVelocity() is a per-instance method on a
+  // trigger that goes inactive the moment its own range is passed, and the
+  // burn should keep answering the scroll for as long as any of the rocket is
+  // still on screen. scrollY is also what carries the platform's native touch
+  // momentum, which is the whole point.
+  let burnCurrent = 0;
+  let lastScrollY = window.scrollY;
+  let emitAccumulator = 0;
 
   let spinProgress = 0;
   // Triggered off .hero-mark, not .hero: the mark sits in the upper part of
@@ -322,6 +453,14 @@ export async function start(mount) {
   }
 
   function render(time, deltaTime) {
+    const dt = deltaTime / 1000;
+    // A touch device that is also under the mobile breakpoint. Written as
+    // "mobile and not finePointer" rather than just "mobile" so a narrow
+    // window on a desktop keeps the cursor behaviour it can actually drive,
+    // instead of falling back to a scroll-only rocket the moment it is
+    // resized past 40rem.
+    const touchOnly = mobile && !finePointer;
+
     if (finePointer) {
       // Roll eases fast (the hand should feel responsive); drift eases
       // noticeably slower, so the translation visibly trails the turn
@@ -333,7 +472,27 @@ export async function start(mount) {
       driftCurrentX += (driftTargetX - driftCurrentX) * kDrift;
       driftCurrentY += (driftTargetY - driftCurrentY) * kDrift;
     }
-    root.position.set(baseX + driftCurrentX, baseY + driftCurrentY, 0);
+    let swayY = 0;
+    if (touchOnly) {
+      const scrollY = window.scrollY;
+      // Guard the divisor: gsap can hand out a 0ms delta on the first frame
+      // after a tab regains focus, which would otherwise read as infinite
+      // scroll speed and fire the throttle wide open for one frame.
+      const speed = Math.abs(scrollY - lastScrollY) / Math.max(dt, 1 / 240);
+      lastScrollY = scrollY;
+      const burnTarget = Math.min(speed / MOBILE_BURN_SPEED, 1);
+      // Asymmetric easing: the engine catches almost immediately but takes
+      // its time going out, so the plume trails the flick the way momentum
+      // itself does instead of snapping off with the finger.
+      const kBurn = 1 - Math.exp(-deltaTime / (burnTarget > burnCurrent ? 60 : 300));
+      burnCurrent += (burnTarget - burnCurrent) * kBurn;
+
+      particles.material.size = MOBILE_SPARK_SIZE * (1 + burnCurrent * 0.4);
+      camera.rotation.z = MOBILE_REST_ROLL + Math.sin(time * MOBILE_SWAY_RATE) * MOBILE_SWAY;
+      swayY = Math.sin(time * MOBILE_BOB_RATE) * MOBILE_BOB + burnCurrent * MOBILE_CLIMB;
+    }
+
+    root.position.set(baseX + driftCurrentX, baseY + driftCurrentY + swayY, 0);
     root.rotation.y = BASE_YAW + spinProgress * Math.PI * 2 * SPIN_TURNS;
 
     if (finePointer) {
@@ -358,9 +517,28 @@ export async function start(mount) {
       }
       prevTailWorld.copy(tailWorld);
       tailTracked = true;
+    } else if (touchOnly && (!scrollTrigger || spinProgress < 1)) {
+      // Stops once the mark has fully cleared the viewport — past that the
+      // rocket is gone and the whole plume would be spawning off-screen, on
+      // the one class of device where wasted frames cost battery.
+      root.updateMatrixWorld(true);
+      tailWorld.copy(TAIL_LOCAL).applyMatrix4(root.matrixWorld);
+      // Fractional rate carried across frames, so a low idle trickle stays
+      // an even drip instead of rounding to zero every frame and never
+      // emitting at all.
+      emitAccumulator += (MOBILE_IDLE_RATE + burnCurrent * (MOBILE_BURN_RATE - MOBILE_IDLE_RATE)) * dt;
+      // Capped so one long frame (a backgrounded tab coming back, and
+      // smoothscroll.js turns off gsap's own lag smoothing) cannot dump a
+      // whole buffer's worth of sparks at once. The leftover is dropped
+      // rather than carried: keeping it would just move the burst to the
+      // next few frames instead of preventing it.
+      const count = Math.min(Math.floor(emitAccumulator), 14);
+      emitAccumulator = Math.min(emitAccumulator - count, 1);
+      for (let i = 0; i < count; i++) {
+        spawnExhaust(tailWorld.x, tailWorld.y, tailWorld.z, burnCurrent);
+      }
     }
 
-    const dt = deltaTime / 1000;
     let anyAlive = false;
     for (let i = 0; i < PARTICLE_COUNT; i++) {
       if (particleLife[i] <= 0) continue;
@@ -402,6 +580,7 @@ export async function start(mount) {
       const materials = Array.isArray(obj.material) ? obj.material : [obj.material];
       materials.forEach((m) => m?.dispose());
     });
+    sparkTexture.dispose();
     renderer.dispose();
     renderer.domElement.remove();
   };

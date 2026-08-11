@@ -224,11 +224,30 @@ export async function start(mount) {
   // drifts toward the cursor, like it's tethered to the pivot rather than
   // just spinning in place. Rotation alone reads as a dial; rotation plus a
   // lagging translation reads as something the cursor is actually pulling
-  // on. Large enough that the nose gets genuinely close to the cursor
-  // itself across most of the mount, not just a token nudge in its
-  // direction — and still deliberately slower than the roll (see the two
-  // `k` constants in render()) so the drift trails the turn, not races it.
-  const DRIFT_MAX = 1.3;
+  // on. Deliberately slower than the roll (see the two `k` constants in
+  // render()) so the drift trails the turn, not races it.
+  //
+  // The target is a real screen-to-world projection, not a capped nudge in
+  // the cursor's direction — a fixed-magnitude pull reads as "leaning
+  // toward" the cursor, not "following" it, since past a certain distance
+  // it stops getting any closer no matter how far the cursor keeps moving.
+  // Projecting onto the z=0 plane the rocket actually sits on (using the
+  // camera's real FOV/aspect, ignoring its live roll — the same
+  // simplification the roll math above already makes) means the nose tracks
+  // proportionally across the whole mount, the way a cursor-follow should.
+  //
+  // That projection is clamped against baseX/baseY, not just scaled down by
+  // a flat constant: the drift and the rest pose's own off-centre offset
+  // (baseX/baseY — see layout(), "big and off-centre on purpose") add
+  // together into the rocket's final position, and baseX alone already
+  // spends a real fraction of the frustum's width. A flat cap sized for the
+  // drift in isolation went straight past the remaining margin the moment
+  // the cursor reached a corner — verified by screenshot, the rocket flew
+  // fully off-frame and invisible at the browser's top-right corner. FRAME_MARGIN
+  // is how much of the frustum's own half-extent counts as "safe" for the
+  // *sum* of rest offset and drift, leaving headroom for the model's own
+  // size beyond that single anchor point.
+  const FRAME_MARGIN = 0.55;
   let driftTargetX = 0;
   let driftTargetY = 0;
   let driftCurrentX = 0;
@@ -242,13 +261,24 @@ export async function start(mount) {
     // Screen Y grows downward while the rotation math below assumes Y-up
     // (matching the rocket's own local +Y "nose" axis), hence the negation.
     rollTarget = Math.atan2(-dx, -dy);
-    // Normalized against the viewport diagonal rather than a fixed pixel
-    // radius, so the drift's reach feels the same on a phone-wide browser
-    // window as it does on an ultrawide.
-    const reach = Math.hypot(window.innerWidth, window.innerHeight) / 2;
-    const pull = Math.min(dist / reach, 1) * DRIFT_MAX;
-    driftTargetX = (dx / dist) * pull;
-    driftTargetY = -(dy / dist) * pull;
+
+    const rect = mount.getBoundingClientRect();
+    const ndcX = dx / (rect.width / 2);
+    const ndcY = -dy / (rect.height / 2);
+    const halfHeight = camera.position.z * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+    const halfWidth = halfHeight * camera.aspect;
+    const safeHalfWidth = halfWidth * FRAME_MARGIN;
+    const safeHalfHeight = halfHeight * FRAME_MARGIN;
+    driftTargetX = THREE.MathUtils.clamp(
+      ndcX * halfWidth,
+      -safeHalfWidth - baseX,
+      safeHalfWidth - baseX
+    );
+    driftTargetY = THREE.MathUtils.clamp(
+      ndcY * halfHeight,
+      -safeHalfHeight - baseY,
+      safeHalfHeight - baseY
+    );
   };
   if (finePointer) window.addEventListener('pointermove', onPointerMove, { passive: true });
 

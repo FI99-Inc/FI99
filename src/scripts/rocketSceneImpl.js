@@ -217,6 +217,21 @@ export async function start(mount) {
   }
 
   const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+
+  // Fine-pointer devices get the mount promoted out of .hero entirely —
+  // reparented to <body> and switched from absolute (confined to the
+  // hero's own box, scrolling away with it) to fixed (pinned to the
+  // viewport, immune to scroll). That's what lets the chase reach past the
+  // top of the hero into the header, and keep answering the cursor after
+  // the hero has scrolled out of view rather than disappearing with it.
+  // Mobile stays exactly as it was: still absolute, still confined, both
+  // for the battery reasons the mobile engine's own comments already give,
+  // and because it has no cursor to chase past the hero's box anyway.
+  if (finePointer) {
+    document.body.appendChild(mount);
+    mount.classList.add('hero-rocket-scene--roam');
+  }
+
   let rollTarget = REST_ROLL;
   let rollCurrent = REST_ROLL;
 
@@ -429,7 +444,13 @@ export async function start(mount) {
   // has already scrolled out of view for most of it. Ending when the mark
   // itself clears the viewport keeps the full spin inside the window it's
   // actually visible.
-  const triggerEl = mount.closest('.hero')?.querySelector('.hero-mark');
+  //
+  // A page-wide lookup rather than mount.closest('.hero')...: correct on
+  // both layouts, but load-bearing on a fine pointer specifically, where
+  // the mount above has just been reparented to <body> and closest('.hero')
+  // would silently return null — no trigger, no spin, no error either, the
+  // kind of bug that only shows up as "huh, it doesn't spin any more."
+  const triggerEl = document.querySelector('.hero-mark');
   const scrollTrigger = triggerEl
     ? ScrollTrigger.create({
         trigger: triggerEl,

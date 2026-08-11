@@ -545,6 +545,16 @@ html.motion .ml99-draw .ml99-path {
   z-index: -1;
 }
 
+/* Added by rocketSceneImpl.js only on fine-pointer devices, at the same
+   moment it reparents the mount out of .hero to <body> — see that file for
+   why. `position: fixed` here is what lets the canvas cover the whole
+   viewport and stay put through scroll instead of scrolling away with the
+   hero; mobile never gets this class and keeps the plain `absolute` above,
+   confined to .hero same as always. */
+.hero-rocket-scene--roam {
+  position: fixed;
+}
+
 .hero-rocket-scene canvas {
   display: block;
   width: 100%;

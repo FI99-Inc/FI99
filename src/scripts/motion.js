@@ -10,7 +10,7 @@ import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { SplitText } from 'gsap/SplitText';
 import { initScramble } from './scramble.js';
-import { initSmoothScroll, resetSmoothScroll } from './smoothscroll.js';
+import { initSmoothScroll, resetSmoothScroll, scrollTo } from './smoothscroll.js';
 import { initWordCycle } from './wordcycle.js';
 import { initPortraitFocus } from './portrait-focus.js';
 
@@ -381,8 +381,23 @@ function clickRipples() {
   return () => stops.forEach((stop) => stop());
 }
 
+// The hero's "SCROLL ↓" cue was decorative text; it's a real button now,
+// and this is what makes clicking it do the thing it says. Deliberately
+// outside the reduced-motion gate below, alongside initSmoothScroll() —
+// a button that promises to scroll should still scroll (just instantly,
+// via scrollTo()'s own fallback) for a visitor who asked for less motion,
+// not silently do nothing.
+function scrollCue() {
+  const button = document.querySelector('[data-scroll-cue]');
+  if (!button) return null;
+  const onClick = () => scrollTo('#lab');
+  button.addEventListener('click', onClick);
+  return () => button.removeEventListener('click', onClick);
+}
+
 let mm;
 let stopPortraits;
+let stopScrollCue;
 
 function boot() {
   const root = document.documentElement;
@@ -393,6 +408,7 @@ function boot() {
   root.classList.add('motion-ready');
 
   initSmoothScroll();
+  stopScrollCue = scrollCue();
 
   // Deliberately outside the reduced-motion gate below, alone in this file.
   // Which portrait is in colour is information rather than decoration, and
@@ -416,6 +432,10 @@ function boot() {
 
 function teardown() {
   ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
+  if (stopScrollCue) {
+    stopScrollCue();
+    stopScrollCue = null;
+  }
   if (stopPortraits) {
     stopPortraits();
     stopPortraits = null;

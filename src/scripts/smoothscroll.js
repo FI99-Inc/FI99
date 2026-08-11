@@ -39,6 +39,22 @@ export function initSmoothScroll() {
   gsap.ticker.lagSmoothing(0);
 }
 
+// Routed through Lenis rather than a plain scrollIntoView(), which Lenis
+// would immediately fight — its own rAF loop keeps writing toward wherever
+// it last thinks the scroll should be, and a native jump isn't it (see the
+// browser-testing notes on this exact fight during scroll-driven testing).
+// Falls back to a native jump when Lenis was never created — reduced
+// motion, or a click that lands before boot() runs — so the cue still
+// does something rather than silently failing.
+export function scrollTo(target) {
+  if (lenis) {
+    lenis.scrollTo(target, { duration: 1.2 });
+    return;
+  }
+  const el = typeof target === 'string' ? document.querySelector(target) : target;
+  el?.scrollIntoView();
+}
+
 // After a swap the new page is shorter or taller and starts at the top, but
 // Lenis is still holding the old document's scroll extent.
 export function resetSmoothScroll() {

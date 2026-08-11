@@ -57,14 +57,23 @@ const selected = projects.slice(0, 3);
       </div>
     </div>
     <!-- The scroll cue is all that is left in this row, so it can show on
-         phones too — and it keeps the hero anchored to the bottom there. -->
-    <div class="hero-snap mt-6 flex items-center justify-end font-mono text-[11px] tracking-[0.16em] text-bone/50 sm:mt-10 sm:tracking-[0.25em]">
-      <span aria-hidden="true">SCROLL ↓</span>
+         phones too — and it keeps the hero anchored to the bottom there.
+         A real button now, not decorative text — motion.js's scrollCue()
+         wires the click to smoothscroll.js's scrollTo(), which routes
+         through Lenis rather than fighting it with a native jump. -->
+    <div class="hero-snap mt-6 flex items-center justify-end sm:mt-10">
+      <button
+        type="button"
+        data-scroll-cue
+        class="bg-transparent p-0 font-mono text-[11px] tracking-[0.16em] text-bone/50 transition-colors hover:text-bone focus-visible:text-bone sm:tracking-[0.25em]"
+      >
+        SCROLL ↓
+      </button>
     </div>
   </section>
 
   <!-- The lab — the three projects that are worth showing -->
-  <section class="px-0 py-16 sm:py-24" aria-labelledby="work-heading">
+  <section id="lab" class="px-0 py-16 sm:py-24" aria-labelledby="work-heading">
     <div class="px-4 sm:px-6">
       <SectionRule label="THE LAB" />
       <h2

@@ -7,6 +7,8 @@ import plotonMap from '../assets/work/ploton-1.png';
 import plotonMethod from '../assets/work/ploton-2.png';
 import writeLibrary from '../assets/work/write-1.png';
 import writeEditor from '../assets/work/write-2.png';
+import wattsLeftPrediction from '../assets/work/watts-left-1.png';
+import wattsLeftLive from '../assets/work/watts-left-2.png';
 
 export const projects = [
   {
@@ -31,8 +33,7 @@ export const projects = [
     ],
   },
   {
-    // Omar's. Mid visual overhaul, so no shots yet — the row carries its
-    // link but stays typographic until there are screenshots worth showing.
+    // Omar's.
     slug: 'watts-left',
     name: "Watt's Left",
     oneLiner: 'EV range, predicted from physics instead of the last few kilometres.',
@@ -40,7 +41,18 @@ export const projects = [
     year: 2026,
     tags: ['app'],
     link: 'https://wattsleft.fi99.ca',
-    shots: [],
+    shots: [
+      {
+        src: wattsLeftPrediction,
+        label: 'PREDICTION',
+        alt: "Watt's Left's prediction screen: 304 km of range left at 80% charge, with a breakdown of where the energy goes across air drag, rolling, climbing and climate.",
+      },
+      {
+        src: wattsLeftLive,
+        label: 'LIVE',
+        alt: "Watt's Left's live navigation screen over a 3D map, showing arrival time, distance left, and battery life at an assumed 110 km/h.",
+      },
+    ],
   },
   {
     slug: 'ploton',

@@ -8,9 +8,6 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { gsap } from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
-
-gsap.registerPlugin(ScrollTrigger);
 
 const MODEL_URL = '/models/rocket.glb';
 
@@ -242,27 +239,35 @@ export async function start(mount) {
   // on. Deliberately slower than the roll (see the two `k` constants in
   // render()) so the drift trails the turn, not races it.
   //
-  // The target is a real screen-to-world projection, not a capped nudge in
-  // the cursor's direction — a fixed-magnitude pull reads as "leaning
-  // toward" the cursor, not "following" it, since past a certain distance
-  // it stops getting any closer no matter how far the cursor keeps moving.
-  // Projecting onto the z=0 plane the rocket actually sits on (using the
-  // camera's real FOV/aspect, ignoring its live roll — the same
-  // simplification the roll math above already makes) means the nose tracks
-  // proportionally across the whole mount, the way a cursor-follow should.
+  // The target used to come from a hand-rolled FOV projection that
+  // deliberately ignored the camera's live roll "for simplicity." That was
+  // the actual bug behind the nose visibly not pointing at the cursor: roll
+  // is *largest* exactly when the cursor is far from centre, i.e. most of
+  // the time, so an unrolled projection was wrong precisely when it mattered
+  // most. The fix (in render(), not here) casts a real ray through the
+  // camera's current transform — via THREE.Raycaster, which correctly
+  // accounts for roll because it reads the camera's actual matrixWorld —
+  // and intersects it with the z=0 plane the rocket sits on. This function
+  // now only stores where on the mount the cursor last was; the projection
+  // itself has to happen every frame in render(), not once per pointer
+  // event, because the camera's roll keeps easing toward rollTarget for
+  // several frames after the cursor stops moving, and the correct drift
+  // target keeps shifting right along with it.
   //
-  // That projection is clamped against baseX/baseY, not just scaled down by
-  // a flat constant: the drift and the rest pose's own off-centre offset
+  // The result is clamped against baseX/baseY, not just scaled down by a
+  // flat constant: the drift and the rest pose's own off-centre offset
   // (baseX/baseY — see layout(), "big and off-centre on purpose") add
   // together into the rocket's final position, and baseX alone already
   // spends a real fraction of the frustum's width. A flat cap sized for the
   // drift in isolation went straight past the remaining margin the moment
   // the cursor reached a corner — verified by screenshot, the rocket flew
-  // fully off-frame and invisible at the browser's top-right corner. FRAME_MARGIN
-  // is how much of the frustum's own half-extent counts as "safe" for the
-  // *sum* of rest offset and drift, leaving headroom for the model's own
-  // size beyond that single anchor point.
+  // fully off-frame and invisible at the browser's top-right corner.
+  // FRAME_MARGIN is how much of the frustum's own half-extent counts as
+  // "safe" for the *sum* of rest offset and drift, leaving headroom for the
+  // model's own size beyond that single anchor point.
   const FRAME_MARGIN = 0.55;
+  let lastNdcX = 0;
+  let lastNdcY = 0;
   let driftTargetX = 0;
   let driftTargetY = 0;
   let driftCurrentX = 0;
@@ -278,22 +283,8 @@ export async function start(mount) {
     rollTarget = Math.atan2(-dx, -dy);
 
     const rect = mount.getBoundingClientRect();
-    const ndcX = dx / (rect.width / 2);
-    const ndcY = -dy / (rect.height / 2);
-    const halfHeight = camera.position.z * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
-    const halfWidth = halfHeight * camera.aspect;
-    const safeHalfWidth = halfWidth * FRAME_MARGIN;
-    const safeHalfHeight = halfHeight * FRAME_MARGIN;
-    driftTargetX = THREE.MathUtils.clamp(
-      ndcX * halfWidth,
-      -safeHalfWidth - baseX,
-      safeHalfWidth - baseX
-    );
-    driftTargetY = THREE.MathUtils.clamp(
-      ndcY * halfHeight,
-      -safeHalfHeight - baseY,
-      safeHalfHeight - baseY
-    );
+    lastNdcX = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    lastNdcY = -(((event.clientY - rect.top) / rect.height) * 2 - 1);
   };
   if (finePointer) window.addEventListener('pointermove', onPointerMove, { passive: true });
 
@@ -427,6 +418,19 @@ export async function start(mount) {
   const prevTailWorld = new THREE.Vector3();
   let tailTracked = false;
 
+  // The nose, symmetric with TAIL_LOCAL on the model's centred/normalised
+  // export (height 2, origin at centre — the tail sits at local Y -1, the
+  // nose at +1). Both sit exactly on root's local Y axis, which is exactly
+  // why root.rotation.y (the scroll tumble) never has to be un-done to find
+  // either point: a yaw rotation cannot move a point that lies on the axis
+  // it's rotating around. So the nose's offset from root.position is just
+  // `root.scale.y` in world units, constant regardless of spin — used below
+  // to solve backward from "where the nose should end up on screen" to
+  // "where root.position needs to be."
+  const NOSE_LOCAL = new THREE.Vector3(0, 1, 0);
+  const raycaster = new THREE.Raycaster();
+  const noseTarget = new THREE.Vector3();
+
   // Mobile throttle state. Read off raw window.scrollY rather than a Lenis or
   // ScrollTrigger velocity: getVelocity() is a per-instance method on a
   // trigger that goes inactive the moment its own range is passed, and the
@@ -437,37 +441,42 @@ export async function start(mount) {
   let lastScrollY = window.scrollY;
   let emitAccumulator = 0;
 
-  let spinProgress = 0;
-  // Triggered off .hero-mark, not .hero: the mark sits in the upper part of
-  // a much taller hero (tagline and scroll cue fill the rest), so tying this
-  // to the whole section spreads the turns across a range where the rocket
-  // has already scrolled out of view for most of it. Ending when the mark
-  // itself clears the viewport keeps the full spin inside the window it's
-  // actually visible.
+  // spinProgress used to be a GSAP ScrollTrigger's 0-1 `progress`, driven off
+  // .hero-mark's own scroll transit and hard-clamped at 1 the instant the
+  // trigger's range ended. That clamp was invisible for as long as the
+  // rocket itself vanished with the hero past that point — but it no longer
+  // does (fine-pointer devices keep chasing the cursor for the rest of the
+  // page, see the reparenting above), so the freeze became a visible bug:
+  // the tumble simply stopped a little way into the page and never moved
+  // again no matter how much further down you scrolled. Replaced with a
+  // plain, uncapped scrollY→turns mapping, computed fresh every frame:
+  // spinProgressTarget keeps climbing for as long as scrollY does, with
+  // nothing to hit a ceiling on. Floored at 0, not clamped above.
   //
-  // A page-wide lookup rather than mount.closest('.hero')...: correct on
-  // both layouts, but load-bearing on a fine pointer specifically, where
-  // the mount above has just been reparented to <body> and closest('.hero')
-  // would silently return null — no trigger, no spin, no error either, the
-  // kind of bug that only shows up as "huh, it doesn't spin any more."
+  // Rate and starting point still come from .hero-mark's own box — the
+  // *speed* of the tumble during its dramatic opening stretch through the
+  // hero is unchanged, it just no longer stops being asked to continue once
+  // that stretch is behind you. A page-wide lookup rather than
+  // mount.closest('.hero')...: correct on both layouts, but load-bearing on
+  // a fine pointer specifically, where the mount above has just been
+  // reparented to <body> and closest('.hero') would silently return null —
+  // no trigger, no spin, no error either, the kind of bug that only shows up
+  // as "huh, it doesn't spin any more."
   const triggerEl = document.querySelector('.hero-mark');
-  const scrollTrigger = triggerEl
-    ? ScrollTrigger.create({
-        trigger: triggerEl,
-        start: 'top top',
-        // The rocket is scaled and offset beyond the mark's own box (see
-        // above — bigger, off-centre, not a centerpiece), so it scrolls out
-        // the top of the viewport well before the mark's bottom edge would.
-        // 'center top' approximates where it actually exits, so the full
-        // spin lands inside the window it's visible rather than mostly
-        // completing after it's already gone.
-        end: 'center top',
-        scrub: 0.6,
-        onUpdate: (self) => {
-          spinProgress = self.progress;
-        },
-      })
-    : null;
+  let spinRangeTop = 0;
+  let spinRangeSpan = 1;
+  function updateSpinRange() {
+    if (!triggerEl) return;
+    const rect = triggerEl.getBoundingClientRect();
+    spinRangeTop = rect.top + window.scrollY;
+    // Half the mark's own height, matching the old trigger's 'top top' →
+    // 'center top' span exactly — see the render()-side comment on why that
+    // range was chosen (the rocket exits the viewport well before the
+    // mark's bottom edge would).
+    spinRangeSpan = Math.max(1, rect.height / 2);
+  }
+  let spinProgressTarget = 0;
+  let spinProgressCurrent = 0;
 
   function resize() {
     const rect = mount.getBoundingClientRect();
@@ -478,6 +487,7 @@ export async function start(mount) {
     camera.updateProjectionMatrix();
     layout();
     updatePivot();
+    updateSpinRange();
   }
   // A plain window `resize` listener has a real race: if it fires once
   // before web fonts finish loading, the mount hasn't reached its final
@@ -520,6 +530,37 @@ export async function start(mount) {
       const kDrift = 1 - Math.exp(-deltaTime / 280);
       rollCurrent += angleDelta(rollTarget, rollCurrent) * kRoll;
       camera.rotation.z = rollCurrent;
+      // The camera's matrixWorld has to reflect *this* frame's roll before
+      // the raycast below reads it — Three.js only refreshes it inside
+      // renderer.render(), which happens at the end of this function, well
+      // after this point.
+      camera.updateMatrixWorld(true);
+
+      // Where the cursor is actually pointing, in world space, on the z=0
+      // plane the rocket sits on — a real ray through the camera's current
+      // (rolled) transform, not a hand-rolled FOV formula. This is what
+      // fixed the nose not pointing at the cursor: setFromCamera reads
+      // camera.matrixWorld, so it's correct at any roll angle, where the
+      // old projection was only ever correct at roll = 0.
+      raycaster.setFromCamera({ x: lastNdcX, y: lastNdcY }, camera);
+      const t = -raycaster.ray.origin.z / raycaster.ray.direction.z;
+      noseTarget.copy(raycaster.ray.origin).addScaledVector(raycaster.ray.direction, t);
+
+      // Solve backward from "the nose should end up at noseTarget" to
+      // "root.position should be this" — see NOSE_LOCAL's comment for why
+      // its offset from root.position is just root.scale.y, independent of
+      // yaw/spin.
+      const noseOffsetY = root.scale.y * NOSE_LOCAL.y;
+      const rawTargetX = noseTarget.x - baseX;
+      const rawTargetY = noseTarget.y - noseOffsetY - baseY;
+
+      const halfHeight = camera.position.z * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+      const halfWidth = halfHeight * camera.aspect;
+      const safeHalfWidth = halfWidth * FRAME_MARGIN;
+      const safeHalfHeight = halfHeight * FRAME_MARGIN;
+      driftTargetX = THREE.MathUtils.clamp(rawTargetX, -safeHalfWidth - baseX, safeHalfWidth - baseX);
+      driftTargetY = THREE.MathUtils.clamp(rawTargetY, -safeHalfHeight - baseY, safeHalfHeight - baseY);
+
       driftCurrentX += (driftTargetX - driftCurrentX) * kDrift;
       driftCurrentY += (driftTargetY - driftCurrentY) * kDrift;
     }
@@ -544,7 +585,15 @@ export async function start(mount) {
     }
 
     root.position.set(baseX + driftCurrentX, baseY + driftCurrentY + swayY, 0);
-    root.rotation.y = BASE_YAW + spinProgress * Math.PI * 2 * SPIN_TURNS;
+
+    spinProgressTarget = Math.max(0, (window.scrollY - spinRangeTop) / spinRangeSpan);
+    // Same "catch up" lag as the cursor drift, and for the same reason:
+    // instant would be rigid, and it doesn't have to be — nothing about the
+    // rotation being scroll-driven means it has to snap to scroll position
+    // exactly.
+    const kSpin = 1 - Math.exp(-deltaTime / 260);
+    spinProgressCurrent += (spinProgressTarget - spinProgressCurrent) * kSpin;
+    root.rotation.y = BASE_YAW + spinProgressCurrent * Math.PI * 2 * SPIN_TURNS;
 
     if (finePointer) {
       root.updateMatrixWorld(true);
@@ -568,7 +617,7 @@ export async function start(mount) {
       }
       prevTailWorld.copy(tailWorld);
       tailTracked = true;
-    } else if (touchOnly && (!scrollTrigger || spinProgress < 1)) {
+    } else if (touchOnly && (!triggerEl || spinProgressCurrent < 1)) {
       // Stops once the mark has fully cleared the viewport — past that the
       // rocket is gone and the whole plume would be spawning off-screen, on
       // the one class of device where wasted frames cost battery.
@@ -625,7 +674,6 @@ export async function start(mount) {
     gsap.ticker.remove(render);
     resizeObserver.disconnect();
     if (finePointer) window.removeEventListener('pointermove', onPointerMove);
-    scrollTrigger?.kill();
     scene.traverse((obj) => {
       obj.geometry?.dispose();
       const materials = Array.isArray(obj.material) ? obj.material : [obj.material];

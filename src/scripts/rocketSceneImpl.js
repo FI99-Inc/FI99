@@ -110,6 +110,16 @@ export async function start(mount) {
   // the right edge instead of a diagonal streak forced through the letters.
   // (Y stretches cleanly because BASE_YAW only rotates around Y — X/Z are
   // what a yaw rotation mixes together, Y is untouched by it.)
+  //
+  // baseX and the X/Z scale are a pair, and the pair is what has to stay
+  // balanced: the rocket is anchored by its RIGHT edge to the right edge of
+  // the viewport, so any width added on X/Z grows leftward, straight toward
+  // the lockup. Widening without pushing baseX out to compensate walks the
+  // model in under the 99 — where a 0.32-alpha bone wireframe sitting under
+  // saturated neon strokes and their glow stops reading as a rocket at all
+  // and just adds noise to the letters. Measured on a 390pt phone, the
+  // lockup's glyphs end at x=281 and these numbers put the rocket at
+  // x=302..362: clear of the letters, still hugging the edge.
   let mobile = null;
   let baseX = 0;
   let baseY = 0;
@@ -118,9 +128,9 @@ export async function start(mount) {
     if (isMobile === mobile) return;
     mobile = isMobile;
     if (mobile) {
-      root.scale.set(0.65, 1.5, 0.55);
-      baseX = 0.6;
-      baseY = 0.55;
+      root.scale.set(0.45, 1.5, 0.42);
+      baseX = 0.98;
+      baseY = 0.5;
       camera.rotation.z = MOBILE_REST_ROLL;
     } else {
       root.scale.setScalar(2.2);

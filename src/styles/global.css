@@ -481,6 +481,8 @@ html.motion .ml99-draw .ml99-path {
 .hero-fi {
   font-size: calc(var(--h) * 1.32);
   line-height: 0.76;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .hero-99 {

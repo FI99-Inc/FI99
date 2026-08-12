@@ -49,6 +49,80 @@ const MOBILE_QUERY = '(width < 40rem)';
 // rule, 0.28 per line lands within a few percent of its mean luminance.
 const WIREFRAME_OPACITY = 0.28;
 
+// ---- Procedural nose-cone detail ----
+// EdgesGeometry(obj.geometry, 15) leaves the nose cone almost bare: its tip
+// is one continuously curved surface, exported as many shallow-angle
+// triangles, so almost none of them clear a 15° threshold the way the fin
+// edges and hull seams do. Lowering the threshold globally to catch it would
+// flood the mid-body cylinder — genuinely flat there — with triangulation
+// noise instead. So a small hand-built ring-and-rib cage is layered on just
+// for the nose, in the model's own local space so it inherits the same
+// position/rotation/scale as the edges pass (see the traverse loop below).
+// The numbers aren't eyeballed: decoding rocket.glb's own position buffer
+// shows a constant ~0.096 body radius up to local y≈0.40, tapering to a
+// point at y≈0.5999890, and an ogive r(t) = R0·sqrt(1-t²) profile fit those
+// sampled cross-sections to within a few percent.
+const NOSE_BASE_Y = 0.4;
+const NOSE_TIP_Y = 0.599989;
+const NOSE_BASE_RADIUS = 0.096;
+const NOSE_RING_COUNT = 5;
+const NOSE_RIB_COUNT = 8;
+const NOSE_RIB_STEPS = 10;
+// Raises the fitted ogive to a power > 1: at t=0 this is still exactly R0
+// (matches the real body radius where the cage starts, so no seam against
+// the still-fat hull just below it) and it still reaches exactly 0 at
+// NOSE_TIP_Y (still converges at the mesh's own real apex, no extension
+// poking out past it), but everywhere in between it narrows faster — the
+// same trick as raising a camera gamma curve. A literal spike past the real
+// tip was tried first and rejected: it read as a thin antenna welded onto a
+// still-blunt cone rather than the cone itself looking sharper.
+const NOSE_SHARPNESS = 1.35;
+
+function noseRadius(y) {
+  const t = THREE.MathUtils.clamp((y - NOSE_BASE_Y) / (NOSE_TIP_Y - NOSE_BASE_Y), 0, 1);
+  return NOSE_BASE_RADIUS * Math.pow(Math.max(0, 1 - t * t), 0.5 * NOSE_SHARPNESS);
+}
+
+function buildNoseDetail() {
+  const points = [];
+  // Rings: circles of latitude climbing toward the tip.
+  for (let i = 1; i <= NOSE_RING_COUNT; i++) {
+    const y = NOSE_BASE_Y + ((NOSE_TIP_Y - NOSE_BASE_Y) * i) / (NOSE_RING_COUNT + 1);
+    const r = noseRadius(y);
+    const segs = 28;
+    for (let s = 0; s < segs; s++) {
+      const a0 = (s / segs) * Math.PI * 2;
+      const a1 = ((s + 1) / segs) * Math.PI * 2;
+      points.push(Math.cos(a0) * r, y, Math.sin(a0) * r, Math.cos(a1) * r, y, Math.sin(a1) * r);
+    }
+  }
+  // Ribs: lines of longitude from the cone's base up to the apex, built from
+  // several short segments each so they hug the ogive curve instead of
+  // cutting a straight chord across it.
+  for (let i = 0; i < NOSE_RIB_COUNT; i++) {
+    const angle = (i / NOSE_RIB_COUNT) * Math.PI * 2;
+    const cos = Math.cos(angle);
+    const sin = Math.sin(angle);
+    for (let s = 0; s < NOSE_RIB_STEPS; s++) {
+      const y0 = NOSE_BASE_Y + ((NOSE_TIP_Y - NOSE_BASE_Y) * s) / NOSE_RIB_STEPS;
+      const y1 = NOSE_BASE_Y + ((NOSE_TIP_Y - NOSE_BASE_Y) * (s + 1)) / NOSE_RIB_STEPS;
+      const r0 = noseRadius(y0);
+      const r1 = noseRadius(y1);
+      points.push(cos * r0, y0, sin * r0, cos * r1, y1, sin * r1);
+    }
+  }
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(points, 3));
+  return new THREE.LineSegments(
+    geometry,
+    new THREE.LineBasicMaterial({
+      color: 0xf2efe9,
+      transparent: true,
+      opacity: WIREFRAME_OPACITY,
+    })
+  );
+}
+
 // ---- Mobile-only motion ----
 // A phone gets none of the three live layers desktop drives off the cursor
 // (clock-hand roll, lagging drift, spark trail) — all three sit behind
@@ -135,6 +209,13 @@ export async function start(mount) {
       lines.rotation.copy(obj.rotation);
       lines.scale.copy(obj.scale);
       obj.parent.add(lines);
+
+      const noseDetail = buildNoseDetail();
+      noseDetail.position.copy(obj.position);
+      noseDetail.rotation.copy(obj.rotation);
+      noseDetail.scale.copy(obj.scale);
+      obj.parent.add(noseDetail);
+
       obj.parent.remove(obj);
       obj.geometry.dispose();
       obj.material.dispose();

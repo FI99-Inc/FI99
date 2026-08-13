@@ -103,7 +103,7 @@ const linkAttrs = isLink
             : 'text-bone/60 group-hover:text-void/70 group-active:text-void/70',
         ]}
       >
-        [{project.status.toUpperCase()}]
+        {project.status.toUpperCase()}
       </span>
       <span class="whitespace-nowrap text-bone/60 group-hover:text-void/70 group-active:text-void/70">
         {project.year} · {project.tags.join(' · ').toUpperCase()}

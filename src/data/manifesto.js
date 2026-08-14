@@ -14,8 +14,7 @@ export const opening = {
   lead: 'You are early.',
   admission: 'So are we.',
   body: [
-    "Everything you'd call living, you got by walking toward someone who could have said no.",
-    "We are builders, so we spend our time deciding how much of that walk to leave in. Asking your crush out, applying for your dream job across the country, speaking up when you could've chosen silence. We wrote this down before we had anything substantial to point at, so you can hold us to it later.",
+    "Everything you'd call living, you got by walking toward someone who could have said no: asking your crush out, applying for your dream job across the world, speaking up when you could've chosen silence. We are builders, so we spend our time deciding how much of that walk to leave in. We had three of you in mind when we wrote this.",
     'We had three people in mind when we wrote this.',
     "The dreamer has renewed the same domain for six years and still opens the file on the subway ride home. The non-believer sat through the prototype, watched it break in the second minute, and clapped along with the room. The defector gets a strong review every cycle for work they can't describe at dinner. You have more in common than you'd admit. Each of you looked at the room you were handed and found it too suffocating.",
   ],
@@ -37,7 +36,7 @@ export const principles = [
   },
   {
     statement: "We won't build the landlord's software.",
-    body: "You can see the other future from here. You rent what you use, the rent climbs, and someone took the door out. Several of the largest firms alive are building toward it and they aren't hiding it. We'd rather ship something small that runs on your machine and keeps working after we're gone. Your parents should be able to use what we make without wondering what it takes from them.",
+    body: "You can see the other future from here. The product is slick, but you are the inventory, and someone took the door out. Several of the largest firms alive are building toward it and they aren't hiding it. We'd rather build something transparent from the get-go that respects your boundaries and never trades our morals for a marginal bump in metrics. Your parents should be able to use what we make without wondering what it is quietly extracting from them.",
   },
   {
     statement: 'We argue, and we keep the arguments.',
@@ -46,6 +45,6 @@ export const principles = [
 ];
 
 export const closing = [
-  'Manifestos usually arrive late, written by people with something to point at. We wrote ours first and signed it. If we break it, you have this page.',
+  'Manifestos usually arrive late, written by people with something to point at. We wrote ours first, with everything to prove, and signed it. If we break it, you have this page.',
   'You are early. So are we.',
 ];

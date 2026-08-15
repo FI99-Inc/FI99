@@ -15,7 +15,6 @@ export const opening = {
   admission: 'So are we.',
   body: [
     "Everything you'd call living, you got by walking toward someone who could have said no: asking your crush out, applying for your dream job across the world, speaking up when you could've chosen silence. We are builders, so we spend our time deciding how much of that walk to leave in. We had three of you in mind when we wrote this.",
-    'We had three people in mind when we wrote this.',
     "The dreamer has renewed the same domain for six years and still opens the file on the subway ride home. The non-believer sat through the prototype, watched it break in the second minute, and clapped along with the room. The defector gets a strong review every cycle for work they can't describe at dinner. You have more in common than you'd admit. Each of you looked at the room you were handed and found it too suffocating.",
   ],
 };

@@ -362,7 +362,8 @@
 }
 
 @media (hover: hover) {
-  .portrait-card:hover {
+  .portrait-card:hover,
+  .manifesto-portrait:hover {
     --portrait-color: 1;
   }
 }

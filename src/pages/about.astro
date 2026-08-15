@@ -1,8 +1,12 @@
 ---
 import Base from '../layouts/Base.astro';
 import SectionRule from '../components/SectionRule.astro';
+import { Image } from 'astro:assets';
 import { opening, principles, closing } from '../data/manifesto.js';
 import { people } from '../data/people.js';
+import observantMan from '../../TheDreamer.png';
+
+const OBSERVANT_WIDTHS = [360, 560, 900];
 
 // The concession is the whole argument, so both halves of it are set as
 // display type rather than body copy. The rest steps down to reading size.
@@ -35,11 +39,39 @@ import { people } from '../data/people.js';
       >
         {opening.admission}
       </p>
-      <div
-        data-reveal
-        class="mt-8 max-w-3xl space-y-5 text-[clamp(1.0625rem,2vw,1.375rem)] leading-relaxed text-bone/80"
-      >
-        {opening.body.map((line) => <p>{line}</p>)}
+      <div class="mt-8 lg:grid lg:grid-cols-[minmax(0,3fr)_minmax(17rem,1fr)] lg:items-start lg:gap-x-12">
+        <div
+          data-reveal
+          class="max-w-3xl space-y-5 text-[clamp(1.0625rem,2vw,1.375rem)] leading-relaxed text-bone/80"
+        >
+          {opening.body.map((line) => <p>{line}</p>)}
+        </div>
+        <figure
+          class="manifesto-portrait manifesto-portrait--desktop hidden lg:block"
+          data-reveal
+        >
+          <div class="portrait-frame aspect-[4/5] border border-bone/20">
+            <Image
+              src={observantMan}
+              alt="The observant man"
+              widths={OBSERVANT_WIDTHS}
+              sizes="(min-width: 64rem) 28vw, calc(100vw - 2rem)"
+              class="portrait-img h-full w-full object-cover"
+              loading="lazy"
+              decoding="async"
+            />
+            <Image
+              src={observantMan}
+              alt=""
+              aria-hidden="true"
+              widths={OBSERVANT_WIDTHS}
+              sizes="(min-width: 64rem) 28vw, calc(100vw - 2rem)"
+              class="portrait-color object-cover"
+              loading="lazy"
+              decoding="async"
+            />
+          </div>
+        </figure>
       </div>
     </div>
 
@@ -89,6 +121,32 @@ import { people } from '../data/people.js';
       >
         {people.map((person) => <li>{person.name.toUpperCase()}</li>)}
       </ul>
+      <figure
+        class="manifesto-portrait manifesto-portrait--mobile mt-12 lg:hidden"
+        data-reveal
+      >
+        <div class="portrait-frame aspect-[4/5] border border-bone/20">
+          <Image
+            src={observantMan}
+            alt="The observant man"
+            widths={OBSERVANT_WIDTHS}
+            sizes="(min-width: 64rem) 28vw, calc(100vw - 2rem)"
+            class="portrait-img h-full w-full object-cover"
+            loading="lazy"
+            decoding="async"
+          />
+          <Image
+            src={observantMan}
+            alt=""
+            aria-hidden="true"
+            widths={OBSERVANT_WIDTHS}
+            sizes="(min-width: 64rem) 28vw, calc(100vw - 2rem)"
+            class="portrait-color object-cover"
+            loading="lazy"
+            decoding="async"
+          />
+        </div>
+      </figure>
     </div>
   </section>
 

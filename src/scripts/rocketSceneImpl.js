@@ -296,9 +296,8 @@ export async function start(mount) {
 
   const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
 
-  // The canvas remains inside the hero on every device. Pointer tracking can
-  // continue globally while it is visible, but the rocket itself now leaves
-  // with the opening composition instead of becoming a site-wide watermark.
+  // Mount placement is owned by rocketScene.js: ON keeps this canvas inside
+  // the hero, while the explicit FOLLOWS setting may promote it to <body>.
 
   let rollTarget = REST_ROLL;
   let rollCurrent = REST_ROLL;

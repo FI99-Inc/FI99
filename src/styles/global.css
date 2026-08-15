@@ -547,12 +547,9 @@ html.motion .ml99-draw .ml99-path {
   z-index: -1;
 }
 
-/* Added by rocketSceneImpl.js only on fine-pointer devices, at the same
-   moment it reparents the mount out of .hero to <body> — see that file for
-   why. `position: fixed` here is what lets the canvas cover the whole
-   viewport and stay put through scroll instead of scrolling away with the
-   hero; mobile never gets this class and keeps the plain `absolute` above,
-   confined to .hero same as always. */
+/* The FOLLOWS setting promotes the mount from .hero to <body>. Fixed
+   positioning lets the canvas cover the viewport and remain present after
+   the hero scrolls away; ON leaves the mount on the absolute rule above. */
 .hero-rocket-scene--roam {
   position: fixed;
 }
@@ -561,6 +558,105 @@ html.motion .ml99-draw .ml99-path {
   display: block;
   width: 100%;
   height: 100%;
+}
+
+/* ---- Rocket mode control ---- */
+
+.rocket-control-trigger:where([data-rocket-mode='off']) {
+  color: color-mix(in srgb, var(--color-bone) 42%, transparent);
+}
+
+.rocket-control-trigger:where([data-rocket-mode='follows']) {
+  color: var(--color-magenta);
+}
+
+.rocket-control-status-short {
+  display: none;
+}
+
+.rocket-control-menu {
+  position: absolute;
+  top: 100%;
+  left: -1px;
+  z-index: 60;
+  width: 10.5rem;
+  border: 1px solid color-mix(in srgb, var(--color-bone) 20%, transparent);
+  background: var(--color-void);
+  box-shadow: 0 0.75rem 2rem rgb(0 0 0 / 45%);
+}
+
+.rocket-control-menu[hidden] {
+  display: none;
+}
+
+.rocket-control-menu button {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.7rem 0.75rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-bone) 14%, transparent);
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.08em;
+  text-align: left;
+}
+
+.rocket-control-menu button:last-child {
+  border-bottom: 0;
+}
+
+.rocket-control-menu button span:last-child {
+  color: color-mix(in srgb, var(--color-bone) 38%, transparent);
+  font-size: 0.55rem;
+}
+
+.rocket-control-menu button:focus-visible,
+.rocket-control-menu button[aria-checked='true'] {
+  background: var(--color-bone);
+  color: var(--color-void);
+}
+
+.rocket-control-menu button:focus-visible span:last-child,
+.rocket-control-menu button[aria-checked='true'] span:last-child {
+  color: color-mix(in srgb, var(--color-void) 60%, transparent);
+}
+
+@media (hover: hover) {
+  .rocket-control-menu button:hover {
+    background: var(--color-bone);
+    color: var(--color-void);
+  }
+
+  .rocket-control-menu button:hover span:last-child {
+    color: color-mix(in srgb, var(--color-void) 60%, transparent);
+  }
+}
+
+@media (22.5rem <= width < 40rem) {
+  .rocket-control-status-short {
+    display: inline;
+  }
+}
+
+@media (width < 40rem) {
+  header nav ul {
+    display: grid;
+    width: 100%;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
+  header nav li {
+    min-width: 0;
+  }
+
+  .main-nav-link,
+  .rocket-control-trigger {
+    padding-inline: 0.25rem;
+    font-size: 0.625rem;
+    letter-spacing: 0.04em;
+  }
 }
 
 /* ---- Hero word cycle ----

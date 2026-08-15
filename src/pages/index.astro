@@ -10,6 +10,7 @@ import { people } from '../data/people.js';
 import { opening } from '../data/manifesto.js';
 
 const selected = projects.slice(0, 3);
+const manifestoExcerpt = `${opening.body[0].split(':')[0]}.`;
 ---
 
 <Base
@@ -102,25 +103,27 @@ const selected = projects.slice(0, 3);
   <section class="border-t border-bone/20 px-4 py-16 sm:px-6 sm:py-24" aria-labelledby="manifesto-heading">
     <SectionRule label="MANIFESTO — EXCERPT" />
     <h2 id="manifesto-heading" class="sr-only">Manifesto</h2>
-    <!-- Only the concession goes here. The principles are the reason to
-         click through to /about. -->
-    <p
-      data-split
-      class="mt-10 font-display text-[clamp(2rem,8vw,5.5rem)] font-black uppercase leading-none tracking-tight"
-    >
-      {opening.lead}
-    </p>
-    <p
-      data-split
-      class="mt-3 font-display text-[clamp(2rem,8vw,5.5rem)] font-black uppercase leading-none tracking-tight text-bone/50"
-    >
-      {opening.admission}
-    </p>
+    <!-- The statement leads as one lockup. The homepage only carries the
+         opening thought; the argument belongs on /about. -->
+    <div class="mt-10 max-w-6xl">
+      <p
+        data-split
+        class="font-display text-[clamp(2.75rem,6.8vw,6.5rem)] font-black uppercase leading-[0.92] tracking-tight"
+      >
+        {opening.lead}
+      </p>
+      <p
+        data-split
+        class="mt-2 font-display text-[clamp(2.25rem,5.2vw,5rem)] font-black uppercase leading-[0.92] tracking-tight text-bone/55 sm:ml-[clamp(2rem,12vw,12rem)]"
+      >
+        {opening.admission}
+      </p>
+    </div>
     <p
       data-reveal
-      class="mt-6 max-w-4xl text-[clamp(1.125rem,2.4vw,1.625rem)] font-medium leading-snug"
+      class="mt-10 max-w-2xl text-[clamp(1.25rem,2.1vw,1.625rem)] font-medium leading-snug text-bone/85"
     >
-      {opening.body[0]}
+      {manifestoExcerpt}
     </p>
     <a
       href="/about"
@@ -128,7 +131,7 @@ const selected = projects.slice(0, 3);
       data-reveal
       class="mt-6 inline-block py-3 font-mono text-sm tracking-[0.2em] text-bone hover:text-magenta active:text-magenta"
     >
-      READ THE REST →
+      READ THE MANIFESTO →
     </a>
   </section>
 

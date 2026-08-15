@@ -9,8 +9,33 @@ import writeLibrary from '../assets/work/write-1.png';
 import writeEditor from '../assets/work/write-2.png';
 import wattsLeftPrediction from '../assets/work/watts-left-1.png';
 import wattsLeftLive from '../assets/work/watts-left-2.png';
+import jmawLanding from '../assets/work/jmaw-1.webp';
+import jmawReport from '../assets/work/jmaw-2.webp';
+
+// This sequence drives both the complete work index and its three homepage picks.
+const projectOrder = ['watts-left', 'jmaw', 'ploton', 'write', 'krine'];
 
 export const projects = [
+  {
+    slug: 'jmaw',
+    name: 'Junior Mining Analyst Workbench',
+    oneLiner: 'Junior mining companies, evaluated by evidence instead of market noise.',
+    status: 'in the lab',
+    year: 2026,
+    tags: ['tool'],
+    shots: [
+      {
+        src: jmawLanding,
+        label: 'RESEARCH',
+        alt: "Junior Mining Analyst Workbench's research landing page, with a ticker search, an explanation of its cited diligence process, and a grid of junior mining companies to explore.",
+      },
+      {
+        src: jmawReport,
+        label: 'ANALYSIS',
+        alt: "Junior Mining Analyst Workbench's US GoldMining report, showing evidence-adjusted feasibility, market data, diligence categories, and sources.",
+      },
+    ],
+  },
   {
     slug: 'krine',
     name: 'Krine',
@@ -37,7 +62,7 @@ export const projects = [
     slug: 'watts-left',
     name: "Watt's Left",
     oneLiner: 'EV range, predicted from physics instead of the last few kilometres.',
-    status: 'in the lab',
+    status: 'shipped',
     year: 2026,
     tags: ['app'],
     link: 'https://wattsleft.fi99.ca',
@@ -96,4 +121,4 @@ export const projects = [
       },
     ],
   },
-];
+].sort((a, b) => projectOrder.indexOf(a.slug) - projectOrder.indexOf(b.slug));

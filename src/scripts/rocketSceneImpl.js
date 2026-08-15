@@ -296,19 +296,9 @@ export async function start(mount) {
 
   const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
 
-  // Fine-pointer devices get the mount promoted out of .hero entirely —
-  // reparented to <body> and switched from absolute (confined to the
-  // hero's own box, scrolling away with it) to fixed (pinned to the
-  // viewport, immune to scroll). That's what lets the chase reach past the
-  // top of the hero into the header, and keep answering the cursor after
-  // the hero has scrolled out of view rather than disappearing with it.
-  // Mobile stays exactly as it was: still absolute, still confined, both
-  // for the battery reasons the mobile engine's own comments already give,
-  // and because it has no cursor to chase past the hero's box anyway.
-  if (finePointer) {
-    document.body.appendChild(mount);
-    mount.classList.add('hero-rocket-scene--roam');
-  }
+  // The canvas remains inside the hero on every device. Pointer tracking can
+  // continue globally while it is visible, but the rocket itself now leaves
+  // with the opening composition instead of becoming a site-wide watermark.
 
   let rollTarget = REST_ROLL;
   let rollCurrent = REST_ROLL;
@@ -522,27 +512,8 @@ export async function start(mount) {
   let lastScrollY = window.scrollY;
   let emitAccumulator = 0;
 
-  // spinProgress used to be a GSAP ScrollTrigger's 0-1 `progress`, driven off
-  // .hero-mark's own scroll transit and hard-clamped at 1 the instant the
-  // trigger's range ended. That clamp was invisible for as long as the
-  // rocket itself vanished with the hero past that point — but it no longer
-  // does (fine-pointer devices keep chasing the cursor for the rest of the
-  // page, see the reparenting above), so the freeze became a visible bug:
-  // the tumble simply stopped a little way into the page and never moved
-  // again no matter how much further down you scrolled. Replaced with a
-  // plain, uncapped scrollY→turns mapping, computed fresh every frame:
-  // spinProgressTarget keeps climbing for as long as scrollY does, with
-  // nothing to hit a ceiling on. Floored at 0, not clamped above.
-  //
-  // Rate and starting point still come from .hero-mark's own box — the
-  // *speed* of the tumble during its dramatic opening stretch through the
-  // hero is unchanged, it just no longer stops being asked to continue once
-  // that stretch is behind you. A page-wide lookup rather than
-  // mount.closest('.hero')...: correct on both layouts, but load-bearing on
-  // a fine pointer specifically, where the mount above has just been
-  // reparented to <body> and closest('.hero') would silently return null —
-  // no trigger, no spin, no error either, the kind of bug that only shows up
-  // as "huh, it doesn't spin any more."
+  // Keep the original uncapped scroll-to-turns mapping. Its rate and starting
+  // point still come from the hero mark's own opening transit.
   const triggerEl = document.querySelector('.hero-mark');
   let spinRangeTop = 0;
   let spinRangeSpan = 1;

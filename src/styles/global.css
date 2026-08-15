@@ -728,60 +728,6 @@ html.motion .ml99-draw .ml99-path {
   opacity: 0.9;
 }
 
-/* ---- Custom cursor (desktop, fine pointers, motion allowed) ---- */
-
-html.cursor-on,
-html.cursor-on a,
-html.cursor-on button,
-html.cursor-on [role='button'] {
-  cursor: none;
-}
-
-.fi-cursor {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 28px;
-  height: 28px;
-  margin: -14px 0 0 -14px;
-  pointer-events: none;
-  z-index: 9999;
-  display: none;
-}
-
-html.cursor-on .fi-cursor {
-  display: block;
-}
-
-.fi-cursor::before,
-.fi-cursor::after {
-  content: '';
-  position: absolute;
-  background: var(--color-bone);
-  mix-blend-mode: difference;
-}
-
-.fi-cursor::before {
-  left: 50%;
-  top: 0;
-  width: 1.5px;
-  height: 100%;
-  transform: translateX(-50%);
-}
-
-.fi-cursor::after {
-  top: 50%;
-  left: 0;
-  height: 1.5px;
-  width: 100%;
-  transform: translateY(-50%);
-}
-
-.fi-cursor.is-active::before,
-.fi-cursor.is-active::after {
-  background: var(--color-magenta);
-}
-
 /* ---- Contact arrows ----
    Four runs converging on the mailto button, marching inward. The address is
    the one thing on the site we actually want clicked, and the bone panel it

@@ -299,13 +299,8 @@ const year = new Date().getFullYear();
       </div>
     </footer>
 
-    <!-- Persisted too: a swapped-in replacement would drop the GSAP tweens
-         driving it and snap the crosshair back to the top-left corner. -->
-    <div class="fi-cursor" aria-hidden="true" transition:persist></div>
-
     <script>
       import '../scripts/motion.js';
-      import '../scripts/cursor.js';
       import '../scripts/gravity.js';
       import '../scripts/clock.js';
       import '../scripts/rocketScene.js';

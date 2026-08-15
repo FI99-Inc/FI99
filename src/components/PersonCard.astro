@@ -2,7 +2,7 @@
 import { Image } from 'astro:assets';
 
 // `compact` is the home-page cut: portrait, name and school only. The full
-// card adds the bio and the person's links, and is what /team renders.
+// card adds the bio, focus areas and the person's links, and is what /team renders.
 const { person, compact = false } = Astro.props;
 
 // Both portrait layers must resolve the same srcset candidate — that is the
@@ -75,6 +75,22 @@ const PORTRAIT_SIZES = '(min-width: 40rem) 30vw, 92vw';
   {
     !compact && person.bio && (
       <p class="mt-4 text-sm leading-relaxed text-bone/70">{person.bio}</p>
+    )
+  }
+
+  {
+    !compact && person.focus?.length > 0 && (
+      <div class="mt-5 border-y border-bone/20 py-3 font-mono text-[10px] uppercase tracking-[0.12em]">
+        <p class="text-bone/40">Focus</p>
+        <ul class="mt-2 flex list-none flex-wrap gap-x-2 gap-y-1 text-bone/75">
+          {person.focus.map((focus, i) => (
+            <li class="flex items-center gap-x-2">
+              {i > 0 && <span class="text-bone/30" aria-hidden="true">·</span>}
+              <span>{focus}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
     )
   }
 

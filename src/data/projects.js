@@ -11,9 +11,11 @@ import wattsLeftPrediction from '../assets/work/watts-left-1.png';
 import wattsLeftLive from '../assets/work/watts-left-2.png';
 import jmawLanding from '../assets/work/jmaw-1.webp';
 import jmawReport from '../assets/work/jmaw-2.webp';
+import fallowLanding from '../assets/work/fallow-1.png';
+import fallowMatch from '../assets/work/fallow-2.png';
 
 // This sequence drives both the complete work index and its three homepage picks.
-const projectOrder = ['watts-left', 'jmaw', 'ploton', 'write', 'krine'];
+const projectOrder = ['watts-left', 'jmaw', 'ploton', 'fallow', 'write', 'krine'];
 
 export const projects = [
   {
@@ -33,6 +35,27 @@ export const projects = [
         src: jmawReport,
         label: 'ANALYSIS',
         alt: "Junior Mining Analyst Workbench's US GoldMining report, showing evidence-adjusted feasibility, market data, diligence categories, and sources.",
+      },
+    ],
+  },
+  {
+    slug: 'fallow',
+    name: 'Fallow',
+    oneLiner: 'Hobby discovery matched to your psychology, not your stated interests.',
+    status: 'in the lab',
+    year: 2026,
+    tags: ['tool'],
+    link: 'https://fallow.fi99.ca',
+    shots: [
+      {
+        src: fallowLanding,
+        label: 'LANDING',
+        alt: 'Fallow’s landing page: "Let your mind lie fallow. See what grows." beside a beta callout offering five matched activities from a three-minute assessment.',
+      },
+      {
+        src: fallowMatch,
+        label: 'MATCH',
+        alt: 'A Fallow swipe card for Axe Throwing Leagues, tagged PHYSICAL/OUTDOOR under the profile traits Absorbing, Involved and Structured, with its first step, cost and match score.',
       },
     ],
   },

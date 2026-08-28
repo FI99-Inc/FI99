@@ -1,0 +1,195 @@
+---
+const {
+  entry,
+  compact = false,
+  headingLevel = 'h3',
+  class: className = '',
+} = Astro.props;
+
+const Heading = headingLevel;
+---
+
+<section
+  class:list={['research-readout font-mono', compact && 'research-readout--compact', className]}
+  aria-label={`${entry.name} version ${entry.version} experiment readout`}
+>
+  <header class="readout-header">
+    <Heading>{entry.name} / {entry.version}</Heading>
+    <span aria-hidden="true">CONFIRMATION</span>
+  </header>
+
+  <dl class="readout-values">
+    {
+      entry.readout.map((item) => (
+        <div>
+          <dt>{item.label}</dt>
+          <dd>{item.value}</dd>
+        </div>
+      ))
+    }
+  </dl>
+
+  <ol class="screen-strip" aria-label="Confirmation screen results">
+    {
+      entry.screens.map((screen) => (
+        <li
+          class:list={[screen.state === 'PASS' ? 'is-pass' : 'is-fail']}
+          aria-label={`Screen ${screen.id}, ${screen.name}: ${screen.state}`}
+        >
+          <span aria-hidden="true">{screen.id}</span>
+          <strong aria-hidden="true">{screen.state[0]}</strong>
+        </li>
+      ))
+    }
+  </ol>
+</section>
+
+<style>
+  .research-readout {
+    min-width: 0;
+    border: 1px solid rgb(242 239 233 / 0.24);
+    background:
+      linear-gradient(90deg, rgb(255 31 143 / 0.07), transparent 38%),
+      rgb(6 6 6 / 0.72);
+  }
+
+  .readout-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    border-bottom: 1px solid rgb(242 239 233 / 0.24);
+    padding: 0.8rem 1rem;
+  }
+
+  .readout-header :global(h2),
+  .readout-header :global(h3),
+  .readout-header :global(p) {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+  }
+
+  .readout-header > span {
+    font-size: 0.58rem;
+    letter-spacing: 0.16em;
+    color: rgb(242 239 233 / 0.42);
+  }
+
+  .readout-values {
+    padding: 0.5rem 1rem 0.75rem;
+  }
+
+  .readout-values > div {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 1rem;
+    padding-block: 0.27rem;
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+  }
+
+  .readout-values dt {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    color: rgb(242 239 233 / 0.54);
+  }
+
+  .readout-values dd {
+    color: var(--color-bone);
+    text-align: right;
+  }
+
+  .screen-strip {
+    display: grid;
+    grid-template-columns: repeat(11, minmax(2.2rem, 1fr));
+    overflow-x: auto;
+    border-top: 1px solid rgb(242 239 233 / 0.24);
+    list-style: none;
+    scrollbar-color: rgb(242 239 233 / 0.35) transparent;
+  }
+
+  .screen-strip li {
+    display: grid;
+    min-height: 3.25rem;
+    place-content: center;
+    gap: 0.12rem;
+    border-right: 1px solid rgb(242 239 233 / 0.18);
+    font-size: 0.58rem;
+    line-height: 1;
+    text-align: center;
+  }
+
+  .screen-strip li:last-child {
+    border-right: 0;
+  }
+
+  .screen-strip li > span:first-child {
+    color: rgb(242 239 233 / 0.44);
+  }
+
+  .screen-strip strong {
+    font-size: 0.75rem;
+  }
+
+  .screen-strip .is-pass strong {
+    color: var(--color-magenta);
+  }
+
+  .screen-strip .is-fail {
+    background-image: repeating-linear-gradient(
+      135deg,
+      transparent 0,
+      transparent 5px,
+      rgb(242 239 233 / 0.055) 5px,
+      rgb(242 239 233 / 0.055) 6px
+    );
+  }
+
+  .screen-strip .is-fail strong {
+    color: rgb(242 239 233 / 0.68);
+  }
+
+  .research-readout--compact .readout-header {
+    padding: 0.65rem 0.85rem;
+  }
+
+  .research-readout--compact .readout-header :global(h2),
+  .research-readout--compact .readout-header :global(h3),
+  .research-readout--compact .readout-header :global(p) {
+    font-size: 0.7rem;
+  }
+
+  .research-readout--compact .readout-values {
+    padding: 0.35rem 0.85rem 0.55rem;
+  }
+
+  .research-readout--compact .readout-values > div {
+    padding-block: 0.18rem;
+    font-size: 0.65rem;
+  }
+
+  .research-readout--compact .screen-strip li {
+    min-height: 2.75rem;
+  }
+
+  @media (min-width: 48rem) {
+    .readout-header {
+      padding: 1rem 1.25rem;
+    }
+
+    .readout-header :global(h2),
+    .readout-header :global(h3),
+    .readout-header :global(p) {
+      font-size: 0.82rem;
+    }
+
+    .readout-values {
+      padding: 0.85rem 1.25rem 1.1rem;
+    }
+
+    .readout-values > div {
+      font-size: 0.74rem;
+    }
+  }
+</style>

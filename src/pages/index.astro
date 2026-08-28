@@ -5,8 +5,10 @@ import SectionRule from '../components/SectionRule.astro';
 import ContactStrip from '../components/ContactStrip.astro';
 import ProjectRow from '../components/ProjectRow.astro';
 import PersonCard from '../components/PersonCard.astro';
+import ResearchFeature from '../components/ResearchFeature.astro';
 import { projects } from '../data/projects.js';
 import { people } from '../data/people.js';
+import { verdant } from '../data/research.js';
 import { opening } from '../data/manifesto.js';
 
 const selected = projects.slice(0, 3);
@@ -95,6 +97,26 @@ const manifestoExcerpt = `${opening.body[0].split(':')[0]}.`;
       >
         ALL WORK →
       </a>
+    </div>
+  </section>
+
+  <!-- Research is evidence-facing, distinct from the product-facing lab. -->
+  <section id="research" class="border-t border-bone/20 py-16 sm:py-24" aria-labelledby="research-heading">
+    <div class="px-4 sm:px-6">
+      <SectionRule label="RESEARCH" />
+      <h2
+        id="research-heading"
+        data-split
+        class="mt-6 font-display text-[clamp(2rem,6vw,5rem)] font-black uppercase leading-none tracking-tight"
+      >
+        Research
+      </h2>
+      <p class="mt-6 max-w-2xl text-base leading-relaxed text-bone/70 sm:text-lg">
+        Some projects start with a product. Others start with a question we do not know how to answer.
+      </p>
+    </div>
+    <div class="mt-10">
+      <ResearchFeature entry={verdant} />
     </div>
   </section>
 

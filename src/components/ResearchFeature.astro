@@ -1,0 +1,141 @@
+---
+import ResearchReadout from './ResearchReadout.astro';
+
+const { entry, large = false, headingLevel = 'h3' } = Astro.props;
+const Heading = headingLevel;
+---
+
+<article class:list={['research-feature', large && 'research-feature--large']} data-reveal>
+  <div class="feature-copy">
+    <p class="feature-number font-mono">RESEARCH — {entry.number}</p>
+    <Heading class="feature-title font-display">
+      <a href={entry.path}>{entry.name}</a>
+    </Heading>
+    <p class="feature-deck">{entry.title}</p>
+    <p class="feature-meta font-mono">
+      {entry.year} · {entry.field} · {entry.status}
+    </p>
+    <p class="feature-abstract">{entry.abstract}</p>
+    <a href={entry.path} data-scramble class="feature-cta font-mono">
+      READ THE RESEARCH →
+    </a>
+  </div>
+
+  <ResearchReadout entry={entry} compact={!large} headingLevel="p" />
+</article>
+
+<style>
+  .research-feature {
+    display: grid;
+    min-width: 0;
+    gap: 2.5rem;
+    padding: 2rem 1rem;
+    border-top: 1px solid rgb(242 239 233 / 0.2);
+    border-bottom: 1px solid rgb(242 239 233 / 0.2);
+  }
+
+  .feature-copy {
+    min-width: 0;
+  }
+
+  .feature-number {
+    font-size: 0.68rem;
+    letter-spacing: 0.2em;
+    color: var(--color-magenta);
+  }
+
+  .feature-title {
+    margin-top: 1rem;
+    font-size: clamp(2.25rem, 5.2vw, 4.5rem);
+    font-weight: 900;
+    line-height: 0.9;
+    letter-spacing: -0.04em;
+  }
+
+  .feature-title a {
+    transition: color 180ms ease;
+  }
+
+  .feature-title a:focus-visible,
+  .feature-title a:active {
+    color: var(--color-magenta);
+  }
+
+  .feature-deck {
+    max-width: 42rem;
+    margin-top: 1.25rem;
+    font-size: clamp(1.08rem, 2.1vw, 1.45rem);
+    font-weight: 500;
+    line-height: 1.28;
+  }
+
+  .feature-meta {
+    margin-top: 1.1rem;
+    font-size: 0.67rem;
+    line-height: 1.7;
+    letter-spacing: 0.12em;
+    color: rgb(242 239 233 / 0.52);
+  }
+
+  .feature-abstract {
+    max-width: 43rem;
+    margin-top: 1.7rem;
+    font-size: 0.95rem;
+    line-height: 1.55;
+    color: rgb(242 239 233 / 0.74);
+  }
+
+  .research-feature--large .feature-title {
+    font-size: clamp(2.4rem, 8vw, 6.75rem);
+  }
+
+  .research-feature--large .feature-abstract {
+    font-size: 1rem;
+    line-height: 1.65;
+  }
+
+  .feature-cta {
+    display: inline-block;
+    margin-top: 1.45rem;
+    padding-block: 0.75rem;
+    font-size: 0.78rem;
+    letter-spacing: 0.16em;
+  }
+
+  .feature-cta:focus-visible,
+  .feature-cta:active {
+    color: var(--color-magenta);
+  }
+
+  @media (hover: hover) {
+    .feature-title a:hover,
+    .feature-cta:hover {
+      color: var(--color-magenta);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .feature-title a {
+      transition: none;
+    }
+  }
+
+  @media (min-width: 40rem) {
+    .research-feature {
+      padding: 3rem 1.5rem;
+    }
+  }
+
+  @media (min-width: 64rem) {
+    .research-feature {
+      grid-template-columns: minmax(0, 1.12fr) minmax(24rem, 0.88fr);
+      align-items: end;
+      gap: clamp(3rem, 7vw, 8rem);
+      padding-block: 3rem;
+    }
+
+    .research-feature--large {
+      padding-block: 5.5rem;
+    }
+  }
+</style>

@@ -28,6 +28,7 @@ const ogImage = new URL('/og.png', Astro.site);
 // { href: '/notes', label: 'NOTES' },
 const nav = [
   { href: '/work', label: 'WORK' },
+  { href: '/research', label: 'RESEARCH' },
   { href: '/team', label: 'TEAM' },
   { href: '/about', label: 'ABOUT' },
   { href: 'mailto:contact@fi99.ca', label: 'CONTACT' },
@@ -177,7 +178,7 @@ const year = new Date().getFullYear();
     </a>
 
     <header class="relative z-50 border-b border-bone/20">
-      <div class="flex flex-wrap items-stretch justify-between sm:flex-nowrap">
+      <div class="flex flex-wrap items-stretch justify-between lg:flex-nowrap">
         <!-- Logo and readout are one group so justify-between still throws the
              nav to the right edge, and the readout sits against the logo's
              rule rather than floating in the middle of the bar. Reads as a
@@ -205,13 +206,13 @@ const year = new Date().getFullYear();
           </a>
           <StatusReadout />
         </div>
-        <nav class="w-full border-t border-bone/20 sm:w-auto sm:border-t-0" aria-label="Main">
+        <nav class="w-full border-t border-bone/20 lg:w-auto lg:border-t-0" aria-label="Main">
           <ul class="flex h-full items-stretch">
-            <li class="rocket-control-item relative flex flex-1 border-l border-bone/20 sm:flex-none">
+            <li class="rocket-control-item relative flex flex-1 border-l border-bone/20 lg:flex-none">
               <div class="flex w-full" data-rocket-control>
                 <button
                   type="button"
-                  class="rocket-control-trigger flex min-h-11 w-full items-center justify-center gap-1.5 px-2.5 py-3 font-mono text-[11px] tracking-[0.08em] hover:bg-bone hover:text-void active:bg-bone active:text-void sm:min-h-0 sm:w-auto sm:px-4 sm:text-xs sm:tracking-[0.14em]"
+                  class="rocket-control-trigger flex min-h-11 w-full items-center justify-center gap-1.5 px-2.5 py-3 font-mono text-[11px] tracking-[0.08em] hover:bg-bone hover:text-void active:bg-bone active:text-void lg:min-h-0 lg:w-auto lg:px-4 lg:text-xs lg:tracking-[0.14em]"
                   aria-haspopup="menu"
                   aria-expanded="false"
                   aria-label="Rocket: On. Choose rocket mode."
@@ -253,14 +254,14 @@ const year = new Date().getFullYear();
             </li>
             {
               nav.map((item) => (
-                <li class="flex flex-1 border-l border-bone/20 sm:flex-none">
+                <li class="flex flex-1 border-l border-bone/20 lg:flex-none">
                   <a
                     href={item.href}
                     data-scramble
-                    /* Phones use a five-column second row now that the rocket
-                       control is present; the equal cells keep every target
-                       reachable without forcing the viewport wider. */
-                    class="main-nav-link flex min-h-11 w-full items-center justify-center px-2.5 py-3 font-mono text-[11px] tracking-[0.08em] hover:bg-bone hover:text-void active:bg-bone active:text-void sm:min-h-0 sm:w-auto sm:px-6 sm:text-xs sm:tracking-[0.2em]"
+                    /* The stacked header uses six equal cells through tablet
+                       widths; the single-row desktop treatment returns only
+                       when every label has room. */
+                    class="main-nav-link flex min-h-11 w-full items-center justify-center px-2.5 py-3 font-mono text-[11px] tracking-[0.08em] hover:bg-bone hover:text-void active:bg-bone active:text-void lg:min-h-0 lg:w-auto lg:px-6 lg:text-xs lg:tracking-[0.2em]"
                   >
                     {item.label}
                   </a>

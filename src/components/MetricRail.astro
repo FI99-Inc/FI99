@@ -1,0 +1,69 @@
+---
+const {
+  label,
+  value,
+  max,
+  display = value,
+  note = '',
+  emphasis = false,
+} = Astro.props;
+
+const width = Math.max(2, Math.min(100, (Number(value) / Number(max)) * 100));
+---
+
+<div class:list={['metric-rail', emphasis && 'metric-rail--emphasis']}>
+  <div class="metric-label font-mono">
+    <span>{label}</span>
+    <span>{display}</span>
+  </div>
+  <div class="metric-track" aria-hidden="true">
+    <span style={`width:${width}%`}></span>
+  </div>
+  {note && <p>{note}</p>}
+</div>
+
+<style>
+  .metric-rail + .metric-rail {
+    margin-top: 1rem;
+  }
+
+  .metric-label {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 1rem;
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+  }
+
+  .metric-label span:first-child {
+    overflow-wrap: anywhere;
+    color: rgb(242 239 233 / 0.64);
+  }
+
+  .metric-label span:last-child {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .metric-track {
+    height: 0.5rem;
+    margin-top: 0.45rem;
+    border: 1px solid rgb(242 239 233 / 0.2);
+  }
+
+  .metric-track span {
+    display: block;
+    height: 100%;
+    background: rgb(242 239 233 / 0.44);
+  }
+
+  .metric-rail--emphasis .metric-track span {
+    background: var(--color-magenta);
+  }
+
+  .metric-rail p {
+    margin-top: 0.35rem;
+    font-size: 0.72rem;
+    line-height: 1.4;
+    color: rgb(242 239 233 / 0.48);
+  }
+</style>

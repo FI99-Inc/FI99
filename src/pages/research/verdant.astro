@@ -1,0 +1,1318 @@
+---
+import Base from '../../layouts/Base.astro';
+import SectionRule from '../../components/SectionRule.astro';
+import ResearchReadout from '../../components/ResearchReadout.astro';
+import MetricRail from '../../components/MetricRail.astro';
+import { verdant } from '../../data/research.js';
+
+const worlds = Array.from({ length: 11 }, (_, index) => `W${index}`);
+
+const experimentFlow = [
+  { label: 'DESIGN EVIDENCE' },
+  { label: 'FREEZE v0.8' },
+  { label: 'DEVELOPMENT_08', detail: '29,696 TASKS + 512 REPLAYS' },
+  { label: '11 FROZEN SCREENS' },
+  { label: 'AUDIT', detail: 'WITHHELD', closed: true },
+];
+
+const roleAblations = [
+  { label: 'FULL FIVE-ROLE SLATE', value: 0.1596346085 },
+  { label: 'REPLACE EASY WIN', value: 0.1512216445 },
+  { label: 'PURE TOP FIVE', value: 0.150507093, emphasis: true },
+  { label: 'REPLACE EXPLORATION', value: 0.1522520257 },
+];
+---
+
+<Base
+  title="VERDANT — FI99 Research"
+  description="A falsifiable recommendation engine for sparse preferences, and the v0.8 confirmation experiment that stopped before AUDIT."
+>
+  <article class="verdant-case">
+    <header class="case-hero px-4 py-12 sm:px-6 sm:py-16">
+      <div class="hero-copy">
+        <SectionRule label="FI99 RESEARCH / 01" />
+        <p class="case-kicker font-mono">2026 · RECOMMENDER SYSTEMS</p>
+        <h1 data-split class="font-display">VERDANT</h1>
+        <p class="case-deck">A falsifiable recommendation engine for sparse, subjective preferences.</p>
+        <p class="case-status font-mono">PAUSED AFTER v0.8 CONFIRMATION</p>
+
+        <blockquote>
+          "A system that cannot reject itself isn't much of an experiment."
+        </blockquote>
+
+        <div class="case-copy intro-copy">
+          <p>
+            VERDANT started with an awkward problem in Fallow, our hobby-discovery project. Most recommenders have behaviour to work with. You watched this, bought that, saved five songs, abandoned three carts. Hobby discovery often has none of it. The useful recommendation may be something you have never tried, searched for, or had a name for.
+          </p>
+          <p>
+            We wanted to know how much a system could infer from a few uncertain answers without pretending those answers were a complete picture of a person.
+          </p>
+          <p>
+            That question grew into VERDANT: a Bayesian recommendation engine that keeps preferences, constraints, motivation, and friction separate; maintains uncertainty over a user's latent state; chooses assessment questions adaptively; and scores activities using a structured utility model.
+          </p>
+          <p>
+            By version 0.8, VERDANT had also acquired something more important than another scoring function: a way to prove us wrong.
+          </p>
+        </div>
+      </div>
+
+      <div class="hero-readout">
+        <ResearchReadout entry={verdant} headingLevel="p" />
+      </div>
+    </header>
+
+    <section class="case-section" aria-labelledby="cold-start-heading">
+      <div class="section-shell">
+        <p class="section-index font-mono">01 / METHOD</p>
+        <div class="section-grid">
+          <div class="case-copy">
+            <h2 id="cold-start-heading">The cold start is the point</h2>
+            <p>
+              Fallow asks people about the kind of activity they may enjoy before it has years of clicks to study. That makes the usual recommendation shortcut less useful. A person can tell us that they like structure, or want something social, or hate long commutes. They cannot reliably hand us a ranked list of future identities.
+            </p>
+            <p>VERDANT models that uncertainty instead of sanding it away.</p>
+            <p>Its production representation uses 26 latent coordinates:</p>
+          </div>
+
+          <aside class="section-note font-mono">
+            <span>RESEARCH FOR FALLOW</span>
+            <span>SUBJECTIVE PREFERENCES</span>
+            <span>SPARSE EVIDENCE</span>
+          </aside>
+        </div>
+
+        <div class="method-strip" data-reveal>
+          <figure>
+            <code>z = [p, r, m] ∈ R²⁶</code>
+            <figcaption>26D LATENT STATE</figcaption>
+          </figure>
+          <figure>
+            <code>q(z) = N(μ, Σ)</code>
+            <figcaption>MAP + LAPLACE</figcaption>
+          </figure>
+          <figure>
+            <code>Ucore = F · ∛(σ(E) · σ(A) · σ(I))</code>
+            <figcaption>STRUCTURED UTILITY</figcaption>
+          </figure>
+          <p class="method-label font-mono">ADAPTIVE QUESTIONS</p>
+        </div>
+
+        <div class="case-copy continuation-copy">
+          <p>
+            where <code>p</code> carries preference state, <code>r</code> carries friction, and <code>m</code> carries motivation. The inference layer maintains a Gaussian approximation,
+          </p>
+          <p>
+            <code>q(z) = N(μ, Σ)</code>
+          </p>
+          <p>
+            and updates it from pairwise and structured assessment evidence with MAP estimation and a Laplace approximation.
+          </p>
+          <p>
+            Activities carry uncertain annotations too. The system does not treat a hobby label as a fact carved into stone. It separates estimated fit from barriers, keeps hard feasibility distinct from soft friction, and allows context to change without silently rewriting long-term preference.
+          </p>
+          <p>For v0.8 we changed the core recommendation score from a rank-based construction to a cardinal one:</p>
+          <p><code>Ucore = F · ∛(σ(E) · σ(A) · σ(I))</code></p>
+          <p>
+            The three terms represent the engine's modeled enjoyment, adoption, and impact channels; <code>F</code> applies feasibility. The geometric form makes a serious weakness in one channel matter instead of letting strength elsewhere hide it.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section class="case-section" aria-labelledby="simulator-heading">
+      <div class="section-shell">
+        <p class="section-index font-mono">02 / SYNTHETIC LAB</p>
+        <div class="section-grid">
+          <div class="case-copy">
+            <h2 id="simulator-heading">We built a simulator because we did not have the right human data</h2>
+            <p>There is an easy way to make a recommendation model look impressive: invent a benchmark that likes it.</p>
+            <p>We wanted the simulator to do the opposite.</p>
+            <p>
+              VERDANT's synthetic lab contains 600 activities, 12 activity families, seven simulated annotators, a 260-question bank, and eleven worlds that perturb different assumptions. Some worlds add noise. Some shift preferences. Some corrupt answers. Others attack the assumptions behind the activity model.
+            </p>
+            <p>
+              Synthetic users are not evidence that VERDANT understands real people. We use them for narrower questions: does the algorithm behave the way we specified, does a component improve an objective when the truth is known, and does that improvement survive controlled forms of misspecification?
+            </p>
+            <p>
+              We froze that distinction into the project rules. Synthetic results could tune software and test scientific implementation. They could not become claims about human psychology.
+            </p>
+          </div>
+
+          <aside class="simulation-ledger font-mono" aria-label="Synthetic laboratory inventory" data-reveal>
+            <div><strong>600</strong><span>ACTIVITIES</span></div>
+            <div><strong>12</strong><span>ACTIVITY FAMILIES</span></div>
+            <div><strong>07</strong><span>SIMULATED ANNOTATORS</span></div>
+            <div><strong>260</strong><span>QUESTION BANK</span></div>
+            <div><strong>11</strong><span>WORLDS</span></div>
+            <p>SYNTHETIC SIMULATION ≠ EMPIRICAL VALIDATION</p>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="case-section" aria-labelledby="frozen-heading">
+      <div class="section-shell">
+        <p class="section-index font-mono">03 / PREREGISTRATION</p>
+        <div class="case-copy">
+          <h2 id="frozen-heading">The test was frozen before we saw the answer</h2>
+          <p>
+            The first seven gates built the simulator, baselines, inference machinery, recommendation policy, metrics, deterministic random-number scheme, and validity rules. Version 0.8 then made a small set of explicit scientific bets.
+          </p>
+          <p>We froze the code at:</p>
+          <p class="commit-ref font-mono">C_DEV_08 = 59ebb9bf5240ff5934c1bd9bfe157915af3f3c02</p>
+          <p>Then we opened a fresh development namespace that the implementation work had never consumed.</p>
+          <p>The run executed:</p>
+          <ul class="run-ledger">
+            <li><strong>29,696</strong> scientific tasks</li>
+            <li><strong>512</strong> deterministic stopped-policy replays</li>
+            <li><strong>11</strong> preregistered confirmation screens</li>
+            <li><strong>0</strong> execution failures</li>
+            <li><strong>0</strong> validity failures</li>
+            <li><strong>0</strong> nonfinite scientific values</li>
+            <li><strong>0</strong> hard-feasibility violations</li>
+          </ul>
+          <p>The scientific runner took about <strong>7 hours 46 minutes</strong> on four local workers.</p>
+          <p>
+            A separate AUDIT namespace was waiting behind the confirmation screen. We were allowed to open it only if all eleven conditions passed.
+          </p>
+        </div>
+
+        <figure class="experiment-flow" data-reveal>
+          <figcaption class="font-mono">EXPERIMENT FLOW / FROZEN ORDER</figcaption>
+          <ol>
+            {
+              experimentFlow.map((step) => (
+                <li class:list={[step.closed && 'is-closed']}>
+                  <strong>{step.label}</strong>
+                  {step.detail && <span>{step.detail}</span>}
+                </li>
+              ))
+            }
+          </ol>
+        </figure>
+      </div>
+    </section>
+
+    <section class="case-section screen-section" aria-labelledby="screens-heading">
+      <div class="section-shell">
+        <p class="section-index font-mono">04 / CONFIRMATION</p>
+        <div class="screen-heading">
+          <div class="case-copy">
+            <h2 id="screens-heading">Five passed. Six did not.</h2>
+            <p>
+              The result arrived without an implementation excuse attached to it. SCREEN-11 passed cleanly, so the failed confirmation was not a corrupted run hiding behind scientific language.
+            </p>
+          </div>
+          <p class="screen-total font-display" aria-label="Five screens passed and six screens failed">
+            <span>05 PASS</span>
+            <span>06 FAIL</span>
+          </p>
+        </div>
+
+        <ol class="screen-matrix" aria-label="All eleven confirmation screens" data-reveal>
+          {
+            verdant.screens.map((screen) => (
+              <li class:list={[screen.state === 'PASS' ? 'is-pass' : 'is-fail']}>
+                <span class="screen-id font-mono">{screen.id}</span>
+                <strong>{screen.name}</strong>
+                <span class="screen-state font-mono">{screen.state}</span>
+              </li>
+            ))
+          }
+        </ol>
+
+        <div class="result-section">
+          <div class="case-copy">
+            <h3>The cardinal score survived</h3>
+            <p>Our clearest positive result came from M1.</p>
+            <p>On W0, lower regret is better:</p>
+          </div>
+
+          <figure class="result-figure m1-figure" data-reveal>
+            <figcaption class="figure-header font-mono">
+              <span>M1 / MEAN R@5</span>
+              <span>LOWER IS BETTER</span>
+            </figcaption>
+            <MetricRail label="CARDINAL CORE" value={0.1222066422} max={0.1372602637} display="0.1222066422" emphasis />
+            <MetricRail label="HISTORICAL RANK CORE" value={0.1372602637} max={0.1372602637} display="0.1372602637" />
+            <ol class="world-strip" aria-label="Cardinal scoring result in worlds W0 through W10">
+              {worlds.map((world) => <li><strong>{world}</strong><span>CARDINAL BETTER</span></li>)}
+            </ol>
+          </figure>
+
+          <div class="case-copy continuation-copy">
+            <p>
+              The paired mean difference was <code>-0.0150536215</code>, about an 11% reduction from the historical rank formulation.
+            </p>
+            <p>
+              More important, the direction held in every simulated world from W0 through W10. Cardinal scoring beat rank scoring <strong>11 out of 11</strong> times.
+            </p>
+            <p>
+              We had changed one of VERDANT's most basic assumptions, then watched the new formulation survive every misspecification world in the confirmation set. That part earned its complexity.
+            </p>
+          </div>
+        </div>
+
+        <div class="result-section">
+          <div class="case-copy">
+            <h3>Our preferred question selector lost</h3>
+            <p>We expected raw information gain to outperform the adjusted selector we had used before. Fresh evidence disagreed.</p>
+          </div>
+
+          <figure class="result-figure selector-figure" data-reveal>
+            <figcaption class="figure-header font-mono">
+              <span>M2 / SELECTOR</span>
+              <span>LOWER IS BETTER</span>
+            </figcaption>
+            <div class="selector-grid">
+              <section aria-labelledby="raw-ig-heading">
+                <h4 id="raw-ig-heading" class="font-mono">RAW_IG</h4>
+                <dl class="font-mono">
+                  <div><dt>AUR</dt><dd>0.1359898122</dd></div>
+                  <div><dt>Q_EQUIV</dt><dd>7</dd></div>
+                </dl>
+              </section>
+              <section class="is-preferred" aria-labelledby="adjusted-ig-heading">
+                <h4 id="adjusted-ig-heading" class="font-mono">ADJUSTED_IG_08</h4>
+                <dl class="font-mono">
+                  <div><dt>AUR</dt><dd>0.1290738506</dd></div>
+                  <div><dt>Q_EQUIV</dt><dd>6</dd></div>
+                </dl>
+              </section>
+            </div>
+          </figure>
+
+          <div class="case-copy continuation-copy">
+            <p>Adjusted IG reached the fixed F2 reference one question sooner and produced lower area-under-regret.</p>
+            <p>SCREEN-2 and SCREEN-3 failed for the same reason. We preferred the wrong selector.</p>
+            <p>Nothing broke. The experiment changed our mind.</p>
+          </div>
+        </div>
+
+        <div class="result-section">
+          <div class="case-copy">
+            <h3>Five questions was too eager</h3>
+            <p>The frozen stopping search selected:</p>
+            <p class="thresholds font-mono">
+              τregret = 0.158403035926751<br />
+              τdecision = 0.02187763557997514
+            </p>
+            <p>The median user stopped after <strong>5 questions</strong>.</p>
+            <p>That sounds efficient until you look at the recommendation regret:</p>
+          </div>
+
+          <figure class="result-figure stopping-figure" data-reveal>
+            <figcaption class="figure-header font-mono">
+              <span>STOPPING / W0 POLICY</span>
+              <span>LOWER IS BETTER</span>
+            </figcaption>
+            <div class="stopping-grid">
+              <p class="question-count"><strong>05</strong><span>QUESTIONS</span></p>
+              <div>
+                <MetricRail label="F0 ORACLE BASELINE" value={0.1264057862} max={0.1596346085} display="0.1264057862" emphasis />
+                <MetricRail label="F2 @ 13 QUESTIONS" value={0.1506734973} max={0.1596346085} display="0.1506734973" />
+                <MetricRail label="STOPPED F3" value={0.1596346085} max={0.1596346085} display="0.1596346085" />
+              </div>
+            </div>
+          </figure>
+
+          <div class="case-copy continuation-copy">
+            <p>
+              SCREEN-4 required stopped F3 to beat a limit of <code>0.1200854969</code>. It missed by a lot. The stopping selector did what we told it to do; the frozen objective allowed a policy that traded away too much recommendation quality for fewer questions.
+            </p>
+            <p>
+              The miss was not confined to W0. Across the eight Gate-E misspecification worlds, F3 beat F0 in <strong>0 of 8</strong> worlds. Median F3 regret was <code>0.1606971848</code>, versus <code>0.1528195242</code> for F2.
+            </p>
+          </div>
+        </div>
+
+        <div class="result-section">
+          <div class="case-copy">
+            <h3>The five-role slate was expensive</h3>
+            <p>
+              VERDANT's slate policy tried to do more than return the five highest-utility activities. It assigned semantic jobs to recommendations, including an Easy Win, Serendipity, and Exploration.
+            </p>
+            <p>Fresh ablations made the cost visible.</p>
+          </div>
+
+          <figure class="result-figure role-figure" data-reveal>
+            <figcaption class="figure-header font-mono">
+              <span>ROLE ABLATIONS / MEAN R@5</span>
+              <span>LOWER IS BETTER</span>
+            </figcaption>
+            <div class="role-grid">
+              <div>
+                {
+                  roleAblations.map((row) => (
+                    <MetricRail
+                      label={row.label}
+                      value={row.value}
+                      max={0.1596346085}
+                      display={row.value.toFixed(10)}
+                      emphasis={row.emphasis}
+                    />
+                  ))
+                }
+              </div>
+              <dl class="role-ledger font-mono">
+                <div><dt>D5 USERS</dt><dd>512 / 512</dd></div>
+                <div><dt>REDUNDANCY</dt><dd>0.000</dd></div>
+                <div><dt>UTILITY RETENTION</dt><dd>94.47%</dd></div>
+                <div><dt>REQUIRED</dt><dd>97%</dd></div>
+              </dl>
+            </div>
+          </figure>
+
+          <div class="case-copy continuation-copy">
+            <p>Every tested replacement improved regret.</p>
+            <p>
+              The D5 screen adds another angle. All 512 W0 users had at least five primary-eligible activities, and mean redundancy was <code>0.0</code>. The slate was diverse. It still retained only about <strong>94.47%</strong> of the pure-top-five comparator's true utility, below the frozen 97% requirement.
+            </p>
+            <p>
+              We had succeeded at making the slate structurally interesting. We had not shown that the structure was worth what it cost.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="case-section" aria-labelledby="survivors-heading">
+      <div class="section-shell">
+        <p class="section-index font-mono">05 / SURVIVORS</p>
+        <div class="case-copy">
+          <h2 id="survivors-heading">Two unusual ideas did survive</h2>
+          <p>The drift test passed for a reason the old metric would have missed.</p>
+          <p>After a simulated preference shock:</p>
+        </div>
+
+        <div class="survivor-grid">
+          <figure class="drift-figure" data-reveal>
+            <figcaption class="figure-header font-mono">
+              <span>DRIFT / W0</span>
+              <span>LOWER IS BETTER</span>
+            </figcaption>
+            <ol class="drift-points">
+              <li><span class="font-mono">B_PRE</span><strong>0.1596346085</strong></li>
+              <li><span class="font-mono">L0 / SHOCK</span><strong>0.1680195819</strong></li>
+              <li><span class="font-mono">L10 / RECOVERY</span><strong>0.1093558435</strong></li>
+            </ol>
+            <div class="drift-line" aria-hidden="true">
+              <span></span><span></span><span></span>
+            </div>
+            <dl class="drift-ledger font-mono">
+              <div><dt>DAMAGE RECOVERY</dt><dd>6.996×</dd></div>
+              <div><dt>LEGACY RATIO</dt><dd>0.349</dd></div>
+              <div><dt>LEGACY</dt><dd>REPORTING ONLY</dd></div>
+            </dl>
+          </figure>
+
+          <figure class="serendipity-figure" data-reveal>
+            <figcaption class="font-mono">SERENDIPITY / NARROW PASS</figcaption>
+            <p><strong>410</strong><span>/ 512</span></p>
+            <dl class="font-mono">
+              <div><dt>OBSERVED</dt><dd>80.078%</dd></div>
+              <div><dt>THRESHOLD</dt><dd>80%</dd></div>
+            </dl>
+          </figure>
+        </div>
+
+        <div class="case-copy continuation-copy">
+          <p>
+            The shock caused <code>0.0083849734</code> of measured damage. Ten new answers recovered far more than that initial loss, producing an uncapped damage-recovery value of <code>6.9963</code>.
+          </p>
+          <p>
+            The older reporting ratio was only <code>0.3491</code>. Version 0.8 had frozen the corrected damage-based definition before the run, and that definition passed.
+          </p>
+          <p>
+            Serendipity passed too, by one of the narrowest margins available at this population size: <strong>410 of 512</strong> eligible users succeeded, or <code>0.80078125</code>, against a threshold of <code>0.80</code>.
+          </p>
+          <p>We would not move either threshold if the number landed on the other side. Passing only means the frozen rule passed.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="case-section audit-section" aria-labelledby="audit-heading">
+      <div class="section-shell">
+        <p class="section-index font-mono">06 / CLOSED GATE</p>
+        <div class="case-copy">
+          <h2 id="audit-heading">So we did not run AUDIT</h2>
+          <p>Version 0.8 failed six of eleven confirmation screens.</p>
+          <p>
+            Our frozen rule said AUDIT could run only if every screen passed and the integrity checks were clean. The integrity checks were clean. The scientific conditions were not.
+          </p>
+          <p>We left AUDIT untouched.</p>
+          <p>
+            That choice matters more to us than finding a flattering way to summarize the scorecard. The whole point of separating design evidence, confirmation evidence, and a held-out audit was to stop ourselves from treating each disappointing result as permission for one more tweak.
+          </p>
+          <p>
+            The DEVELOPMENT_08 realization is now design evidence. We will not rerun it as a fresh confirmation attempt, and we will not retune version 0.8 against it.
+          </p>
+        </div>
+
+        <aside class="audit-gate font-mono" aria-label="AUDIT was not run" data-reveal>
+          <div class="audit-title">
+            <strong>AUDIT</strong>
+            <span>GATE CLOSED</span>
+          </div>
+          <dl>
+            <div><dt>STATUS</dt><dd>NOT RUN</dd></div>
+            <div><dt>NAMESPACE</dt><dd>UNTOUCHED</dd></div>
+            <div><dt>AUTHORIZATION</dt><dd>REFUSED</dd></div>
+            <div><dt>REASON</dt><dd>6 / 11 SCREENS FAILED</dd></div>
+          </dl>
+          <div class="gate-bars" aria-hidden="true"><span></span><span></span></div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="case-section final-section" aria-labelledby="state-heading">
+      <div class="section-shell">
+        <p class="section-index font-mono">07 / CURRENT STATE</p>
+        <div class="case-copy">
+          <h2 id="state-heading">Current state</h2>
+          <p><strong>VERDANT is paused after v0.8 confirmation.</strong></p>
+          <p>
+            We are keeping the parts that earned our confidence, especially cardinal scoring and the discipline around uncertainty, drift, validity, and reproducibility. The confirmation run also gave us clear reasons to question raw information gain, aggressive stopping, and the current five-role composition.
+          </p>
+          <p>Fallow can use those lessons without pretending VERDANT 0.8 graduated.</p>
+          <p>
+            We expect to return to the research. A future version would start as a new hypothesis with a new preregistration and a fresh development namespace. It would not be a patched interpretation of this result.
+          </p>
+          <p>For now, the experiment is finished.</p>
+        </div>
+
+        <div class="final-readout font-mono" data-reveal>
+          <p>PAUSED AFTER v0.8 CONFIRMATION</p>
+          <dl>
+            <div><dt>C_DEV_08</dt><dd>59ebb9bf…</dd></div>
+            <div><dt>SUMMARY</dt><dd>503c3d6e…</dd></div>
+            <div><dt>AUDIT</dt><dd>UNTOUCHED</dd></div>
+          </dl>
+        </div>
+      </div>
+    </section>
+  </article>
+</Base>
+
+<style>
+  .verdant-case {
+    --research-rule: rgb(242 239 233 / 0.2);
+    --research-muted: rgb(242 239 233 / 0.66);
+  }
+
+  .case-hero {
+    display: grid;
+    gap: 3rem;
+    min-height: min(58rem, calc(var(--vh100, 1svh) * 100 - 6rem));
+    align-items: end;
+    border-bottom: 1px solid var(--research-rule);
+  }
+
+  .hero-copy {
+    min-width: 0;
+  }
+
+  .case-kicker {
+    margin-top: 2rem;
+    font-size: 0.68rem;
+    letter-spacing: 0.16em;
+    color: var(--research-muted);
+  }
+
+  .case-hero h1 {
+    margin-top: 0.8rem;
+    font-size: clamp(2.65rem, 8vw, 8rem);
+    font-weight: 900;
+    line-height: 0.82;
+    letter-spacing: -0.055em;
+  }
+
+  .case-deck {
+    max-width: 49rem;
+    margin-top: 1.5rem;
+    font-size: clamp(1.2rem, 2.5vw, 1.75rem);
+    font-weight: 500;
+    line-height: 1.3;
+  }
+
+  .case-status {
+    margin-top: 1.2rem;
+    font-size: 0.7rem;
+    letter-spacing: 0.13em;
+    color: var(--color-magenta);
+  }
+
+  blockquote {
+    max-width: 45rem;
+    margin-top: 3rem;
+    padding-left: 1.25rem;
+    border-left: 3px solid var(--color-magenta);
+    font-size: clamp(1.2rem, 2.4vw, 1.65rem);
+    font-weight: 500;
+    line-height: 1.4;
+  }
+
+  .intro-copy {
+    margin-top: 3rem;
+  }
+
+  .hero-readout {
+    min-width: 0;
+    align-self: end;
+  }
+
+  .case-section {
+    border-bottom: 1px solid var(--research-rule);
+  }
+
+  .section-shell {
+    padding: 4rem 1rem;
+  }
+
+  .section-index {
+    margin-bottom: 2.25rem;
+    font-size: 0.68rem;
+    letter-spacing: 0.18em;
+    color: var(--color-magenta);
+  }
+
+  .case-copy {
+    max-width: 48rem;
+    min-width: 0;
+  }
+
+  .case-copy h2 {
+    margin-bottom: 2rem;
+    font-family: var(--font-display);
+    font-size: clamp(2rem, 5vw, 4.6rem);
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.035em;
+    text-transform: uppercase;
+  }
+
+  .case-copy h3 {
+    margin-bottom: 1.5rem;
+    font-family: var(--font-display);
+    font-size: clamp(1.45rem, 3vw, 2.7rem);
+    font-weight: 750;
+    line-height: 1.08;
+    letter-spacing: -0.025em;
+    text-transform: uppercase;
+  }
+
+  .case-copy p {
+    font-size: clamp(1.02rem, 1.45vw, 1.18rem);
+    line-height: 1.72;
+    color: rgb(242 239 233 / 0.79);
+  }
+
+  .case-copy p + p {
+    margin-top: 1.25rem;
+  }
+
+  .case-copy strong {
+    color: var(--color-bone);
+    font-weight: 650;
+  }
+
+  .case-copy code {
+    font-family: var(--font-mono);
+    font-size: 0.84em;
+    color: var(--color-bone);
+    overflow-wrap: anywhere;
+  }
+
+  .continuation-copy {
+    margin-top: 2.5rem;
+  }
+
+  .section-grid {
+    display: grid;
+    gap: 2.5rem;
+  }
+
+  .section-note {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding-top: 0.3rem;
+    font-size: 0.66rem;
+    letter-spacing: 0.14em;
+    color: rgb(242 239 233 / 0.45);
+  }
+
+  .method-strip {
+    display: grid;
+    margin-top: 3rem;
+    border: 1px solid var(--research-rule);
+  }
+
+  .method-strip figure,
+  .method-label {
+    min-width: 0;
+    padding: 1.3rem 1rem;
+    border-bottom: 1px solid var(--research-rule);
+  }
+
+  .method-strip > :last-child {
+    border-bottom: 0;
+  }
+
+  .method-strip code {
+    display: block;
+    overflow-x: auto;
+    font-family: var(--font-mono);
+    font-size: clamp(0.82rem, 1.35vw, 1.05rem);
+    font-weight: 600;
+    white-space: nowrap;
+    scrollbar-color: rgb(242 239 233 / 0.35) transparent;
+  }
+
+  .method-strip figcaption,
+  .method-label {
+    margin-top: 1.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.61rem;
+    letter-spacing: 0.13em;
+    color: rgb(242 239 233 / 0.46);
+  }
+
+  .method-label {
+    margin-top: 0;
+  }
+
+  .simulation-ledger {
+    border-top: 1px solid var(--research-rule);
+  }
+
+  .simulation-ledger > div {
+    display: grid;
+    grid-template-columns: 5rem minmax(0, 1fr);
+    align-items: baseline;
+    gap: 1rem;
+    padding: 0.7rem 0;
+    border-bottom: 1px solid var(--research-rule);
+  }
+
+  .simulation-ledger strong {
+    font-size: 1.55rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .simulation-ledger span,
+  .simulation-ledger p {
+    font-size: 0.64rem;
+    letter-spacing: 0.12em;
+    color: rgb(242 239 233 / 0.52);
+  }
+
+  .simulation-ledger p {
+    margin-top: 1.5rem;
+    color: var(--color-magenta);
+  }
+
+  .commit-ref,
+  .thresholds {
+    padding: 0.8rem 1rem;
+    border-left: 2px solid var(--color-magenta);
+    background: rgb(242 239 233 / 0.045);
+    font-size: 0.72rem !important;
+    overflow-wrap: anywhere;
+  }
+
+  .run-ledger {
+    display: grid;
+    max-width: 48rem;
+    margin: 1.4rem 0 1.8rem;
+    list-style: none;
+    border-top: 1px solid var(--research-rule);
+  }
+
+  .run-ledger li {
+    display: grid;
+    grid-template-columns: 5rem minmax(0, 1fr);
+    gap: 1rem;
+    padding: 0.65rem 0;
+    border-bottom: 1px solid var(--research-rule);
+    font-size: 0.88rem;
+    color: var(--research-muted);
+  }
+
+  .run-ledger strong {
+    font-family: var(--font-mono);
+    color: var(--color-bone);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .experiment-flow {
+    margin-top: 3rem;
+    border-top: 1px solid var(--research-rule);
+    border-bottom: 1px solid var(--research-rule);
+  }
+
+  .experiment-flow figcaption,
+  .figure-header {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0.5rem 1rem;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--research-rule);
+    font-size: 0.63rem;
+    letter-spacing: 0.13em;
+    color: rgb(242 239 233 / 0.48);
+  }
+
+  .experiment-flow ol {
+    display: grid;
+    list-style: none;
+  }
+
+  .experiment-flow li {
+    position: relative;
+    display: flex;
+    min-height: 6rem;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.4rem;
+    padding: 1rem;
+    border-bottom: 1px solid var(--research-rule);
+  }
+
+  .experiment-flow li:last-child {
+    border-bottom: 0;
+  }
+
+  .experiment-flow li:not(:last-child)::after {
+    content: '↓';
+    position: absolute;
+    bottom: -0.7rem;
+    left: 1rem;
+    z-index: 1;
+    padding: 0 0.35rem;
+    background: var(--color-void);
+    color: var(--color-magenta);
+    font-family: var(--font-mono);
+  }
+
+  .experiment-flow strong,
+  .experiment-flow span {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+  }
+
+  .experiment-flow span {
+    color: rgb(242 239 233 / 0.52);
+  }
+
+  .experiment-flow .is-closed {
+    background-image: repeating-linear-gradient(
+      135deg,
+      transparent 0,
+      transparent 8px,
+      rgb(242 239 233 / 0.07) 8px,
+      rgb(242 239 233 / 0.07) 9px
+    );
+  }
+
+  .screen-heading {
+    display: grid;
+    gap: 2.5rem;
+    align-items: end;
+  }
+
+  .screen-total {
+    display: flex;
+    flex-direction: column;
+    font-size: clamp(2rem, 5vw, 4.5rem);
+    font-weight: 800;
+    line-height: 0.95;
+    letter-spacing: -0.04em;
+  }
+
+  .screen-total span:first-child {
+    color: var(--color-magenta);
+  }
+
+  .screen-total span:last-child {
+    color: rgb(242 239 233 / 0.48);
+  }
+
+  .screen-matrix {
+    display: grid;
+    margin-top: 3rem;
+    list-style: none;
+    border-top: 1px solid var(--research-rule);
+    border-left: 1px solid var(--research-rule);
+  }
+
+  .screen-matrix li {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.8rem;
+    min-height: 5rem;
+    padding: 1rem;
+    border-right: 1px solid var(--research-rule);
+    border-bottom: 1px solid var(--research-rule);
+  }
+
+  .screen-matrix .is-fail {
+    background-image: repeating-linear-gradient(
+      135deg,
+      transparent 0,
+      transparent 7px,
+      rgb(242 239 233 / 0.045) 7px,
+      rgb(242 239 233 / 0.045) 8px
+    );
+  }
+
+  .screen-id,
+  .screen-state {
+    font-size: 0.64rem;
+    letter-spacing: 0.1em;
+    color: rgb(242 239 233 / 0.45);
+  }
+
+  .screen-matrix strong {
+    font-size: 0.78rem;
+    line-height: 1.35;
+  }
+
+  .screen-matrix .is-pass .screen-state {
+    color: var(--color-magenta);
+  }
+
+  .result-section {
+    margin-top: 5rem;
+    padding-top: 4rem;
+    border-top: 1px solid var(--research-rule);
+  }
+
+  .result-figure,
+  .drift-figure,
+  .serendipity-figure {
+    margin-top: 2.5rem;
+    padding: 0 1rem 1.25rem;
+    border: 1px solid var(--research-rule);
+  }
+
+  .figure-header {
+    margin: 0 -1rem 1.25rem;
+    padding-inline: 1rem;
+  }
+
+  .world-strip {
+    display: grid;
+    grid-template-columns: repeat(11, minmax(5.8rem, 1fr));
+    margin-top: 1.5rem;
+    overflow-x: auto;
+    list-style: none;
+    border-top: 1px solid var(--research-rule);
+    border-left: 1px solid var(--research-rule);
+    scrollbar-color: rgb(242 239 233 / 0.35) transparent;
+  }
+
+  .world-strip li {
+    display: flex;
+    min-height: 4.5rem;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.35rem;
+    padding: 0.65rem;
+    border-right: 1px solid var(--research-rule);
+    border-bottom: 1px solid var(--research-rule);
+    font-family: var(--font-mono);
+  }
+
+  .world-strip strong {
+    font-size: 0.65rem;
+    color: var(--color-magenta);
+  }
+
+  .world-strip span {
+    font-size: 0.52rem;
+    line-height: 1.3;
+    letter-spacing: 0.06em;
+    color: rgb(242 239 233 / 0.48);
+  }
+
+  .selector-grid {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .selector-grid section {
+    border: 1px solid var(--research-rule);
+  }
+
+  .selector-grid h4 {
+    padding: 0.8rem;
+    border-bottom: 1px solid var(--research-rule);
+    font-size: 0.69rem;
+    letter-spacing: 0.1em;
+  }
+
+  .selector-grid dl,
+  .role-ledger,
+  .drift-ledger,
+  .serendipity-figure dl,
+  .audit-gate dl,
+  .final-readout dl {
+    padding: 0.65rem 0.8rem;
+  }
+
+  .selector-grid dl > div,
+  .role-ledger > div,
+  .drift-ledger > div,
+  .serendipity-figure dl > div,
+  .audit-gate dl > div,
+  .final-readout dl > div {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 1rem;
+    padding: 0.34rem 0;
+    font-size: 0.68rem;
+    letter-spacing: 0.06em;
+  }
+
+  .selector-grid dt,
+  .role-ledger dt,
+  .drift-ledger dt,
+  .serendipity-figure dt,
+  .audit-gate dt,
+  .final-readout dt {
+    color: rgb(242 239 233 / 0.5);
+  }
+
+  .selector-grid dd,
+  .role-ledger dd,
+  .drift-ledger dd,
+  .serendipity-figure dd,
+  .audit-gate dd,
+  .final-readout dd {
+    text-align: right;
+  }
+
+  .selector-grid .is-preferred {
+    border-color: var(--color-magenta);
+  }
+
+  .stopping-grid,
+  .role-grid {
+    display: grid;
+    gap: 2rem;
+  }
+
+  .question-count {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    border-bottom: 1px solid var(--research-rule);
+    padding-bottom: 1.25rem;
+    font-family: var(--font-display);
+  }
+
+  .question-count strong {
+    font-size: clamp(4.5rem, 13vw, 8rem);
+    font-weight: 900;
+    line-height: 0.82;
+    letter-spacing: -0.06em;
+  }
+
+  .question-count span {
+    margin-top: 0.6rem;
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.14em;
+    color: rgb(242 239 233 / 0.52);
+  }
+
+  .role-ledger {
+    border: 1px solid var(--research-rule);
+  }
+
+  .survivor-grid {
+    display: grid;
+    gap: 1.5rem;
+  }
+
+  .drift-points {
+    display: grid;
+    gap: 1rem;
+    list-style: none;
+  }
+
+  .drift-points li {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+
+  .drift-points span {
+    font-size: 0.63rem;
+    letter-spacing: 0.1em;
+    color: rgb(242 239 233 / 0.48);
+  }
+
+  .drift-points strong {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .drift-line {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    align-items: center;
+    height: 4rem;
+    margin-top: 1.25rem;
+    background:
+      linear-gradient(166deg, transparent 0 28%, rgb(242 239 233 / 0.38) 28.5% 29%, transparent 29.5% 100%),
+      linear-gradient(196deg, transparent 0 51%, var(--color-magenta) 51.5% 52%, transparent 52.5% 100%);
+  }
+
+  .drift-line span {
+    width: 0.65rem;
+    height: 0.65rem;
+    justify-self: center;
+    border: 2px solid var(--color-bone);
+    background: var(--color-void);
+  }
+
+  .drift-line span:last-child {
+    border-color: var(--color-magenta);
+  }
+
+  .drift-ledger {
+    margin-top: 0.75rem;
+    border-top: 1px solid var(--research-rule);
+  }
+
+  .serendipity-figure {
+    align-self: end;
+  }
+
+  .serendipity-figure figcaption {
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--research-rule);
+    font-size: 0.63rem;
+    letter-spacing: 0.13em;
+    color: rgb(242 239 233 / 0.48);
+  }
+
+  .serendipity-figure > p {
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
+    margin-top: 1rem;
+    font-family: var(--font-display);
+  }
+
+  .serendipity-figure > p strong {
+    font-size: clamp(3.4rem, 9vw, 6rem);
+    font-weight: 850;
+    line-height: 1;
+  }
+
+  .serendipity-figure > p span {
+    color: rgb(242 239 233 / 0.5);
+  }
+
+  .audit-section {
+    background: linear-gradient(90deg, rgb(139 43 255 / 0.055), transparent 50%);
+  }
+
+  .audit-gate {
+    position: relative;
+    margin-top: 3rem;
+    border: 2px solid var(--color-bone);
+  }
+
+  .audit-title {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1.1rem;
+    border-bottom: 1px solid var(--research-rule);
+  }
+
+  .audit-title strong {
+    font-family: var(--font-display);
+    font-size: clamp(2.2rem, 7vw, 5rem);
+    line-height: 1;
+  }
+
+  .audit-title span {
+    font-size: 0.62rem;
+    letter-spacing: 0.11em;
+    color: var(--color-magenta);
+    text-align: right;
+  }
+
+  .audit-gate dl {
+    padding: 1rem;
+  }
+
+  .audit-gate dl > div {
+    padding-block: 0.55rem;
+    border-bottom: 1px solid var(--research-rule);
+  }
+
+  .audit-gate dl > div:last-child {
+    border-bottom: 0;
+  }
+
+  .gate-bars {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    height: 1.25rem;
+    border-top: 2px solid var(--color-bone);
+  }
+
+  .gate-bars span:first-child {
+    border-right: 4px double var(--color-bone);
+  }
+
+  .final-section {
+    border-bottom: 0;
+  }
+
+  .final-readout {
+    max-width: 48rem;
+    margin-top: 3rem;
+    border: 1px solid var(--research-rule);
+  }
+
+  .final-readout > p {
+    padding: 1rem;
+    border-bottom: 1px solid var(--research-rule);
+    font-size: clamp(0.78rem, 1.8vw, 1rem);
+    letter-spacing: 0.1em;
+    color: var(--color-magenta);
+  }
+
+  @media (min-width: 40rem) {
+    .section-shell {
+      padding: 6rem 1.5rem;
+    }
+
+    .method-strip {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .method-strip figure,
+    .method-label {
+      border-right: 1px solid var(--research-rule);
+    }
+
+    .method-strip > :nth-child(2n) {
+      border-right: 0;
+    }
+
+    .method-strip > :nth-last-child(-n + 2) {
+      border-bottom: 0;
+    }
+
+    .selector-grid,
+    .stopping-grid,
+    .role-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .question-count {
+      border-right: 1px solid var(--research-rule);
+      border-bottom: 0;
+      padding-right: 2rem;
+      padding-bottom: 0;
+    }
+
+    .drift-points {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  @media (min-width: 48rem) {
+    .screen-matrix {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .screen-heading {
+      grid-template-columns: minmax(0, 1fr) auto;
+    }
+
+    .survivor-grid {
+      grid-template-columns: minmax(0, 1.55fr) minmax(17rem, 0.65fr);
+      align-items: end;
+    }
+  }
+
+  @media (min-width: 64rem) {
+    .case-hero {
+      grid-template-columns: minmax(0, 1.25fr) minmax(24rem, 0.75fr);
+      gap: clamp(4rem, 8vw, 9rem);
+      min-height: min(62rem, calc(var(--vh100, 1svh) * 100 - 3.1rem));
+    }
+
+    .section-grid {
+      grid-template-columns: minmax(0, 3fr) minmax(13rem, 1fr);
+      gap: clamp(4rem, 9vw, 10rem);
+    }
+
+    .hero-readout {
+      align-self: start;
+      margin-top: 4.25rem;
+    }
+
+    .method-strip {
+      grid-template-columns: 1fr 1fr 1.5fr 0.75fr;
+    }
+
+    .method-strip figure,
+    .method-label {
+      border-right: 1px solid var(--research-rule);
+      border-bottom: 0;
+    }
+
+    .method-strip > :last-child {
+      border-right: 0;
+    }
+
+    .experiment-flow ol {
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
+
+    .experiment-flow li {
+      min-height: 9rem;
+      border-right: 1px solid var(--research-rule);
+      border-bottom: 0;
+    }
+
+    .experiment-flow li:last-child {
+      border-right: 0;
+    }
+
+    .experiment-flow li:not(:last-child)::after {
+      content: '→';
+      right: -0.72rem;
+      bottom: auto;
+      left: auto;
+    }
+
+    .screen-matrix {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .result-figure {
+      max-width: 70rem;
+    }
+
+    .audit-gate {
+      max-width: 70rem;
+    }
+  }
+</style>

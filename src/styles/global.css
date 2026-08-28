@@ -641,17 +641,19 @@ html.motion .ml99-draw .ml99-path {
   }
 }
 
-@media (width < 40rem) {
+@media (width < 64rem) {
   header nav ul {
     display: grid;
     width: 100%;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(6, minmax(0, 1fr));
   }
 
   header nav li {
     min-width: 0;
   }
+}
 
+@media (width < 40rem) {
   .main-nav-link,
   .rocket-control-trigger {
     padding-inline: 0.25rem;

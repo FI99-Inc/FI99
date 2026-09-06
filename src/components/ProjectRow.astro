@@ -17,7 +17,7 @@ const preview = previewSlot && project.shots?.length ? project.shots[0] : null;
 
 // The row sets every name in caps, which flattens how the names are actually
 // written. Splitting into same-case runs lets the originally-lowercase ones
-// render a notch smaller: KRINE keeps its capital K, PlotON keeps its ON.
+// render a notch smaller: PlotON keeps its ON.
 // Apostrophes, spaces and digits have no case to read, so they join whatever
 // run they land in rather than counting as capitals — otherwise Watt's Left
 // spikes its apostrophe to full height between two smaller letters.

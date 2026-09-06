@@ -1,8 +1,6 @@
 // Real FI99 projects. Keep the shape exactly as-is. oneLiner stays under 12
 // words. `shots` are imported rather than referenced by path so Astro can
 // optimize them and emit the right dimensions at build time.
-import krineFeed from '../assets/work/krine-1.png';
-import krinePost from '../assets/work/krine-2.png';
 import plotonMap from '../assets/work/ploton-1.png';
 import plotonMethod from '../assets/work/ploton-2.png';
 import writeLibrary from '../assets/work/write-1.png';
@@ -15,7 +13,7 @@ import fallowLanding from '../assets/work/fallow-1.png';
 import fallowMatch from '../assets/work/fallow-2.png';
 
 // This sequence drives both the complete work index and its three homepage picks.
-const projectOrder = ['watts-left', 'jmaw', 'ploton', 'fallow', 'write', 'krine'];
+const projectOrder = ['watts-left', 'jmaw', 'ploton', 'fallow', 'write'];
 
 export const projects = [
   {
@@ -56,27 +54,6 @@ export const projects = [
         src: fallowMatch,
         label: 'MATCH',
         alt: 'A Fallow swipe card for Axe Throwing Leagues, tagged PHYSICAL/OUTDOOR under the profile traits Absorbing, Involved and Structured, with its first step, cost and match score.',
-      },
-    ],
-  },
-  {
-    slug: 'krine',
-    name: 'Krine',
-    oneLiner: 'Anonymous confessions, sorted by a machine that reads feelings.',
-    status: 'shipped',
-    year: 2026,
-    tags: ['app'],
-    link: 'https://krine.ca',
-    shots: [
-      {
-        src: krineFeed,
-        label: 'FEED',
-        alt: "Krine's feed: the headline “Honest thoughts, anonymously” above a search field, sort controls, and posts tagged THOUGHT and CONFESSION.",
-      },
-      {
-        src: krinePost,
-        label: 'POST',
-        alt: 'A single Krine post tagged #SAD, #CONFESSION and #ANGRY, showing 186 likes and an empty comment box.',
       },
     ],
   },

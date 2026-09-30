@@ -23,7 +23,7 @@ export const projects = [
     status: 'v1 complete · ongoing',
     year: 2026,
     tags: ['tool'],
-    link: 'https://jsa.fi99.ca',
+    link: 'https://jma.fi99.ca',
     shots: [
       {
         src: jmawLanding,

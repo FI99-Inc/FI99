@@ -20,9 +20,10 @@ export const projects = [
     slug: 'jmaw',
     name: 'Junior Mining Analyst Workbench',
     oneLiner: 'Junior mining companies, evaluated by evidence instead of market noise.',
-    status: 'in the lab',
+    status: 'v1 complete · ongoing',
     year: 2026,
     tags: ['tool'],
+    link: 'https://jsa.fi99.ca',
     shots: [
       {
         src: jmawLanding,

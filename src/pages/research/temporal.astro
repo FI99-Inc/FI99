@@ -1,0 +1,866 @@
+---
+import { Image } from 'astro:assets';
+import Base from '../../layouts/Base.astro';
+import SectionRule from '../../components/SectionRule.astro';
+import ResearchReadout from '../../components/ResearchReadout.astro';
+import { temporal } from '../../data/research.js';
+import horizonShot from '../../assets/research/temporal-horizon.png';
+import '../../styles/case-study.css';
+
+// Horizon's provisional compression (DECISIONS O-002): position along the
+// surface is log1p(elapsed / 6h) / log1p(extent / 6h) over a 14-day extent.
+// Computed here rather than hard-coded so the figure is the real curve.
+const EXTENT_H = 14 * 24;
+const horizonX = (hours) => Math.log1p(hours / 6) / Math.log1p(EXTENT_H / 6);
+const horizonTicks = [
+  { label: 'NOW', hours: 0 },
+  { label: '3H', hours: 3 },
+  { label: '6H', hours: 6 },
+  { label: '12H', hours: 12 },
+  { label: '1D', hours: 24 },
+  { label: '2D', hours: 48 },
+  { label: '4D', hours: 96 },
+  { label: '7D', hours: 168 },
+  { label: '14D', hours: EXTENT_H },
+].map((tick) => ({
+  ...tick,
+  curved: (horizonX(tick.hours) * 100).toFixed(2),
+  linear: ((tick.hours / EXTENT_H) * 100).toFixed(2),
+}));
+const firstDayShare = Math.round(horizonX(24) * 100);
+
+// The data path, in the order the architecture doc draws it. The arrows are
+// data flow, not code dependencies: the core depends on none of the others.
+const pipeline = [
+  { label: 'SOURCE ADAPTERS', detail: 'TRACE · ICALENDAR · LOCAL' },
+  { label: 'NORMALIZED OBJECTS', detail: 'TYPED, WITH PROVENANCE' },
+  { label: 'TEMPORAL-CORE', detail: 'PURE EVALUATION', core: true },
+  { label: 'VIEW MODEL', detail: 'TODAY · RADAR · CALENDAR' },
+  { label: 'HORIZON UI', detail: 'SVELTE 5' },
+];
+
+const coreModules = [
+  { name: 'clock', note: 'Injected time. Nothing reads the wall clock.' },
+  { name: 'codec', note: 'Strict input, canonical output bytes.' },
+  { name: 'domain', note: 'Typed IDs and one struct per species.' },
+  { name: 'lifecycle', note: 'Phase, overdue, removed.' },
+  { name: 'recurrence', note: 'Bounded occurrences with stable keys.' },
+  { name: 'source_health', note: 'Fresh, stale, partial, unavailable.' },
+  { name: 'opportunity', note: 'Declared time minus anchors, as Windows.' },
+  { name: 'fit', note: 'Every target × Window, fits or not.' },
+  { name: 'pressure', note: 'Exact E/O against a real cutoff.' },
+  { name: 'suggestion', note: 'Advice with a basis and an expiry.' },
+];
+
+const ownership = [
+  { kind: 'STORED FACTS', writer: 'User, through local commands', example: 'An anchor at 2 PM. A real cutoff.' },
+  { kind: 'IMPORTED FACTS', writer: 'The owning source', example: 'A Quercus due date. A Trace task.' },
+  { kind: 'USER STATE', writer: 'User, through local commands', example: 'Effort estimates, intentions, declared hours.' },
+  { kind: 'DERIVED STATE', writer: 'Deterministic evaluation', example: 'Phase, Windows, fit, pressure, health.' },
+  { kind: 'SUGGESTIONS', writer: 'Inference, never a fact writer', example: 'Consider this work. This is getting risky.' },
+];
+
+const objectClasses = [
+  { name: 'ANCHOR', kind: 'FACT', note: 'A lecture at 2. A train at 6:40.' },
+  { name: 'DEADLINE', kind: 'FACT', note: 'Due Thursday, 11:59 PM. Not the work itself.' },
+  { name: 'TASK', kind: 'FROM TRACE', note: 'Flexible work. The task app still owns it.' },
+  { name: 'INTENTION', kind: 'SOFT', note: 'Maybe groceries Sunday.' },
+  { name: 'ROUTINE', kind: 'SOFT', note: 'Laundry, Sunday-ish.' },
+  { name: 'WINDOW', kind: 'DERIVED', note: '52 free minutes before class.' },
+  { name: 'MILESTONE', kind: 'ELEVATION', note: 'An anchor or deadline that matters more.' },
+  { name: 'SUGGESTION', kind: 'INFERRED', note: 'Start the case tonight. Always labelled a guess.' },
+];
+
+const todayEdit = [
+  { name: 'FIXED', limit: 'ALL', note: "Today's anchors and real deadlines." },
+  { name: 'WORTH DOING', limit: '≤ 3', note: 'Flexible work with a definite fit before midnight.' },
+  { name: 'LOOSE', limit: '≤ 2', note: 'Intentions and routines that could fit.' },
+  { name: 'ON THE RADAR', limit: '≤ 3', note: "What's coming that the edit hasn't already shown." },
+];
+
+const gateFlow = [
+  { label: 'G0 CONSTITUTION', detail: '2026-09-08' },
+  { label: 'G1 TEMPORAL CORE', detail: '2026-09-08' },
+  { label: 'G2 TRACE-BACKED HORIZON', detail: '2026-09-10' },
+  { label: 'G3 QUERCUS + TRIAL', detail: 'REORDERED', closed: true },
+  { label: 'G4 CALENDAR RELEASE', detail: '7 / 8 TASKS' },
+];
+---
+
+<Base
+  title="TEMPORAL · FI99 R&D"
+  description="A deterministic temporal engine that keeps facts, plans, and guesses apart, and the Windows app built on top of it."
+>
+  <article class="case-study">
+    <header class="case-hero px-4 py-12 sm:px-6 sm:py-16">
+      <div class="hero-copy">
+        <SectionRule />
+        <p class="case-kicker font-mono">2026 · {temporal.field}</p>
+        <h1 data-split class="font-display">TEMPORAL</h1>
+        <p class="case-deck">{temporal.title}</p>
+        <p class="case-status font-mono">{temporal.status}</p>
+
+        <blockquote>
+          “Same snapshot, same clock, same answer. Byte for byte.”
+        </blockquote>
+
+        <div class="case-copy intro-copy">
+          <p>
+            Most calendar apps store everything as the same thing: a box with a start and an end. A lecture, a due date, a vague plan to call someone, and a guess about when you should start an essay all end up with one shape, one colour, and one way of going red when they pass.
+          </p>
+          <p>
+            Temporal is our attempt at the layer underneath. It's a temporal engine written in Rust that takes a snapshot of someone's obligations, plans, and declared free time, plus an explicit "now," and works out what's fixed, what fits, what's getting risky, and what's only a suggestion. Every answer comes with its reasons.
+          </p>
+          <p>
+            It started as a tool for one person's week, and the product on top is still tuned that way. The engine is the part we think travels. It has no idea it lives inside a Windows app, and we built it so it never has to.
+          </p>
+        </div>
+      </div>
+
+      <div class="hero-readout">
+        <ResearchReadout entry={temporal} headingLevel="p" />
+      </div>
+    </header>
+
+    <section class="case-section shot-section" aria-label="Temporal 0.2 screenshot">
+      <div class="section-shell">
+        <figure class="app-shot" data-reveal>
+          <div class="app-shot-frame">
+            <Image
+              src={horizonShot}
+              alt="Temporal 0.2 on a fresh install: the Horizon home screen with next fixed, at risk, worth doing, and open time panels, two setup prompts, and the four Today groups (Fixed, Worth doing, Loose, On the radar), all empty because no calendars or usual hours are declared yet."
+              widths={[640, 1000, 1276]}
+              sizes="(min-width: 64rem) 70rem, 92vw"
+              class="block w-full"
+            />
+          </div>
+          <figcaption class="font-mono">
+            <span>TEMPORAL 0.2 / HORIZON, FIRST RUN</span>
+            <span>EVERY PANEL EMPTY ON PURPOSE: NO HOURS DECLARED YET</span>
+          </figcaption>
+        </figure>
+        <div class="case-copy continuation-copy">
+          <p>
+            That's a first run. Nothing is suggested, the open time reads 0 MIN, and "worth doing" says none fits. That isn't a bug. The engine won't treat an empty calendar as free time, so until you declare the hours you're actually willing to work, the honest answer is that it doesn't know.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section class="case-section" aria-labelledby="architecture-heading">
+      <div class="section-shell">
+        <p class="section-index font-mono">01 / ARCHITECTURE</p>
+        <div class="section-grid">
+          <div class="case-copy">
+            <h2 id="architecture-heading">The engine is one pure function</h2>
+            <p>
+              The whole core comes down to a single call: <code>temporal_core::evaluate(&amp;input)</code>. It validates a normalized snapshot and returns the complete evaluation. No database, no network, no UI, and no clock of its own.
+            </p>
+            <p>
+              Time comes in as an argument. The app reads the clock once per evaluation and freezes it, and nothing in the domain, recurrence, fit, pressure, or sorting code is allowed to read wall-clock time, the OS timezone, random numbers, or network state. That one rule is what makes the rest testable. We can hand the engine a fake Tuesday, move the clock forward a day, and see exactly what changes.
+            </p>
+          </div>
+
+          <aside class="section-note font-mono">
+            <span>RUST 1.98</span>
+            <span>TAURI 2 · SVELTE 5</span>
+            <span>SQLITE, LOCAL ONLY</span>
+            <span>NO AI IN THE CORE</span>
+          </aside>
+        </div>
+
+        <figure class="experiment-flow pipeline-flow" data-reveal>
+          <figcaption class="font-mono">DATA FLOW / NOT DEPENDENCIES</figcaption>
+          <ol>
+            {
+              pipeline.map((step) => (
+                <li class:list={[step.core && 'is-core']}>
+                  <strong>{step.label}</strong>
+                  <span>{step.detail}</span>
+                </li>
+              ))
+            }
+          </ol>
+        </figure>
+
+        <div class="case-copy continuation-copy">
+          <p>
+            Data flows toward the screen, but the core depends on none of the boxes around it. Adapters normalize into its types. The view model reads its output. If the core ever leaves this app, nothing has to be untangled first.
+          </p>
+          <p>
+            Output is canonical too. The codec writes UTF-8 JSON with sorted keys, integer numbers, and no insignificant whitespace, and every result array has a fixed ordering. Shuffle the input records and the output bytes don't move. We compare results by bytes, never by how a map happened to iterate.
+          </p>
+        </div>
+
+        <ol class="module-grid font-mono" aria-label="temporal-core modules" data-reveal>
+          {
+            coreModules.map((module) => (
+              <li>
+                <strong>{module.name}</strong>
+                <span>{module.note}</span>
+              </li>
+            ))
+          }
+        </ol>
+      </div>
+    </section>
+
+    <section class="case-section" aria-labelledby="model-heading">
+      <div class="section-shell">
+        <p class="section-index font-mono">02 / DOMAIN</p>
+        <div class="case-copy">
+          <h2 id="model-heading">Not everything is an event</h2>
+          <p>
+            There's no universal mutable "event" record with optional fields for every case. The engine keeps eight species of temporal claim, shares only identifiers, time primitives, and metadata between them, and won't let one quietly become another.
+          </p>
+        </div>
+
+        <ol class="class-grid font-mono" aria-label="Temporal object classes" data-reveal>
+          {
+            objectClasses.map((item) => (
+              <li class:list={[item.kind === 'FACT' && 'is-fact', (item.kind === 'INFERRED' || item.kind === 'DERIVED') && 'is-inferred']}>
+                <strong>{item.name}</strong>
+                <span class="class-kind">{item.kind}</span>
+                <span class="class-note">{item.note}</span>
+              </li>
+            ))
+          }
+        </ol>
+
+        <div class="case-copy continuation-copy">
+          <p>
+            Every piece of data also has exactly one writer. A due date from a coursework feed belongs to the feed. An effort estimate belongs to the user. Windows, pressure, and source health belong to the evaluator, and caching them never promotes them to facts. A suggestion can't write a fact at all.
+          </p>
+        </div>
+
+        <figure class="result-figure ownership-figure" data-reveal>
+          <figcaption class="figure-header font-mono">
+            <span>OWNERSHIP / ONE WRITER PER FIELD</span>
+            <span>ENFORCED BY TYPES</span>
+          </figcaption>
+          <dl class="ownership-table">
+            {
+              ownership.map((row) => (
+                <div>
+                  <dt class="font-mono">{row.kind}</dt>
+                  <dd class="font-mono">{row.writer}</dd>
+                  <dd>{row.example}</dd>
+                </div>
+              ))
+            }
+          </dl>
+        </figure>
+
+        <div class="case-copy continuation-copy">
+          <p>
+            We lean on Rust's type system for this instead of good intentions. Each ID is its own type (an <code>AnchorId</code> can't be passed where a <code>DeadlineId</code> is expected), and compile-fail doctests prove that code which tries to write a field it doesn't own won't build.
+          </p>
+          <p>
+            Imported identity is just as strict. An outside record is keyed by its source, its external ID, a recurrence occurrence key, and what it projects into. The engine never matches records by title. Re-importing the same key keeps the same local ID and every annotation on it, even if the source changed the title or the time.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section class="case-section" aria-labelledby="pressure-heading">
+      <div class="section-shell">
+        <p class="section-index font-mono">03 / PRESSURE</p>
+        <div class="case-copy">
+          <h2 id="pressure-heading">Pressure, minus the guilt</h2>
+          <p>
+            Every real deadline gets a pressure result. <code>E</code> is the known remaining work, <code>O</code> is the usable time left before the cutoff, and risk comes from their ratio. The math is boring on purpose.
+          </p>
+        </div>
+
+        <figure class="result-figure pressure-figure" data-reveal>
+          <figcaption class="figure-header font-mono">
+            <span>PRESSURE / E ÷ O</span>
+            <span>POLICY PROOF-V1</span>
+          </figcaption>
+          <ol class="pressure-scale font-mono">
+            <li class="is-room"><strong>ROOM</strong><span>E/O &lt; 1/2</span></li>
+            <li class="is-tight"><strong>TIGHT</strong><span>1/2 ≤ E/O ≤ 1</span></li>
+            <li class="is-insufficient"><strong>INSUFFICIENT</strong><span>E/O &gt; 1</span></li>
+          </ol>
+          <dl class="role-ledger font-mono">
+            <div><dt>UNKNOWN EFFORT</dt><dd>UNKNOWN, NOT GUESSED</dd></div>
+            <div><dt>ZERO OPPORTUNITY</dt><dd>INSUFFICIENT, NO RATIO</dd></div>
+            <div><dt>PAST A REAL CUTOFF</dt><dd>OVERDUE</dd></div>
+            <div><dt>SKIPPED SUGGESTION</dt><dd>BACK IN THE POOL</dd></div>
+          </dl>
+        </figure>
+
+        <div class="case-copy continuation-copy">
+          <p>
+            The comparisons use exact rational pairs and integer cross-multiplication, so there's no floating-point drift, no division by zero, and no infinity or NaN anywhere in the output. Overflow is a typed error instead of a wrong answer. An unknown estimate produces "unknown" rather than a made-up number, and an "at least" estimate is labelled as a lower bound that can't certify anything as safe.
+          </p>
+          <p>
+            Importance doesn't touch the ratio either. A deadline you care about more shouldn't look riskier than the arithmetic says it is.
+          </p>
+          <p>
+            The rule we care about most is that a plan isn't a debt. If the engine suggests starting something Monday and Monday passes, that suggestion just goes back into the pool of things that could fit. Only a real cutoff can make something overdue. Suggestions also carry the evaluation they came from and an expiry, so when the inputs change, the old advice gets marked invalidated instead of hanging around looking current.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section class="case-section" aria-labelledby="horizon-heading">
+      <div class="section-shell">
+        <p class="section-index font-mono">04 / HORIZON</p>
+        <div class="case-copy">
+          <h2 id="horizon-heading">The next six hours get more room than next week</h2>
+          <p>
+            Horizon is the interface we built on top of the engine. Time runs across one continuous surface, and the further out something is, the more it gets squeezed. Right now the curve is:
+          </p>
+          <p class="thresholds font-mono">x(t) = log1p(t / 6h) / log1p(14d / 6h)</p>
+          <p>
+            So the next 24 hours take up about {firstDayShare}% of the width. On a plain linear timeline they'd get about 7%.
+          </p>
+        </div>
+
+        <figure class="result-figure horizon-figure" data-reveal>
+          <figcaption class="figure-header font-mono">
+            <span>HORIZON / 14-DAY EXTENT</span>
+            <span>SAME TWO WEEKS, TWO SCALES</span>
+          </figcaption>
+          <div class="horizon-track">
+            <p class="track-label font-mono">HORIZON</p>
+            <div class="track-rail is-curved" aria-hidden="true">
+              <span class="track-first-day" style={`width: ${horizonTicks[4].curved}%`}></span>
+              {horizonTicks.map((tick) => <i style={`left: ${tick.curved}%`}><b>{tick.label}</b></i>)}
+            </div>
+          </div>
+          <div class="horizon-track">
+            <p class="track-label font-mono">LINEAR</p>
+            <div class="track-rail" aria-hidden="true">
+              <span class="track-first-day" style={`width: ${horizonTicks[4].linear}%`}></span>
+              {
+                horizonTicks
+                  .filter((tick) => tick.hours === 0 || tick.hours >= 24)
+                  .map((tick) => <i style={`left: ${tick.linear}%`}><b>{tick.label}</b></i>)
+              }
+            </div>
+          </div>
+          <p class="sr-only">
+            On Horizon the first day spans about {firstDayShare} percent of the surface. On a linear scale it spans about 7 percent.
+          </p>
+        </figure>
+
+        <div class="case-copy continuation-copy">
+          <p>
+            The curve is provisional. It got a prototype on screen, and real weeks will decide whether it stays.
+          </p>
+          <p>
+            Above the surface sits a daily edit called Today. It's finite on purpose, and it reuses the same evaluation instead of running its own logic. If nothing definitely fits, a group stays empty, and an unknown fit never gets used to fill a quota.
+          </p>
+        </div>
+
+        <ol class="today-grid font-mono" aria-label="The Today edit" data-reveal>
+          {
+            todayEdit.map((group) => (
+              <li>
+                <span class="today-limit">{group.limit}</span>
+                <strong>{group.name}</strong>
+                <span class="today-note">{group.note}</span>
+              </li>
+            ))
+          }
+        </ol>
+      </div>
+    </section>
+
+    <section class="case-section" aria-labelledby="sources-heading">
+      <div class="section-shell">
+        <p class="section-index font-mono">05 / SOURCES</p>
+        <div class="case-copy">
+          <h2 id="sources-heading">A failed sync isn't an empty week</h2>
+          <p>
+            Every source (a Trace export, an iCalendar file, a Google, Outlook, or Quercus subscription) has its own health: fresh, stale, partial, unavailable, or incompatible. When a refresh fails, the last-known data stays put and gets marked conditional. The engine will never tell you you're free or caught up because a download broke.
+          </p>
+          <p>
+            Only an explicit deletion or a successful authoritative refresh can remove an imported object. Nothing writes back to any source, and subscription links are treated as credentials, stored in Windows Credential Manager so the app's database only ever sees a host name.
+          </p>
+          <p>Building the calendar release turned up two problems worth writing down:</p>
+          <ul class="run-ledger plain-ledger">
+            <li>
+              <strong>F-1.</strong> The store had marked the Trace snapshot as required for every evaluation, so one stale export made every Window and every unrelated deadline "conditional." Trace now qualifies only the rows that actually come from Trace, which is what the domain contract said all along.
+            </li>
+            <li>
+              <strong>D-015.</strong> Calendar feeds report an assignment's due date but never whether it was handed in, so every past assignment would stay overdue forever. You can now mark one handled locally. The source fact stays exactly as reported, and undoing it is one action.
+            </li>
+          </ul>
+        </div>
+
+        <aside class="audit-gate font-mono" aria-label="iCalendar adapter coverage" data-reveal>
+          <div class="audit-title">
+            <strong>ICS</strong>
+            <span>READ-ONLY ADAPTER</span>
+          </div>
+          <dl>
+            <div><dt>PARSER + EXPANSION TESTS</dt><dd>43</dd></div>
+            <div><dt>COVERS</dt><dd>RRULE · RDATE · EXDATE</dd></div>
+            <div><dt>ALSO</dt><dd>OVERRIDES · DST · TZIDS</dd></div>
+            <div><dt>WRITE-BACK</dt><dd>NONE</dd></div>
+          </dl>
+        </aside>
+      </div>
+    </section>
+
+    <section class="case-section" aria-labelledby="gates-heading">
+      <div class="section-shell">
+        <p class="section-index font-mono">06 / EVIDENCE</p>
+        <div class="case-copy">
+          <h2 id="gates-heading">Fake weeks first</h2>
+          <p>
+            We built Temporal in gates, and the first one had no code in it. Gate 0 was a written constitution: the product, the temporal model, a domain contract, and a suite of synthetic weeks. Gate 1 had to prove the engine against those weeks before any interface existed.
+          </p>
+        </div>
+
+        <figure class="experiment-flow" data-reveal>
+          <figcaption class="font-mono">BUILD GATES / IN ORDER</figcaption>
+          <ol>
+            {
+              gateFlow.map((step) => (
+                <li class:list={[step.closed && 'is-closed']}>
+                  <strong>{step.label}</strong>
+                  <span>{step.detail}</span>
+                </li>
+              ))
+            }
+          </ol>
+        </figure>
+
+        <div class="case-copy continuation-copy">
+          <p>By the end of Gate 2:</p>
+          <ul class="run-ledger">
+            <li><strong>81</strong> scenario inputs with explicit expected results</li>
+            <li><strong>51</strong> invalid fixtures, all rejected</li>
+            <li><strong>111</strong> integration tests passing</li>
+            <li><strong>0</strong> network or filesystem permissions in the shipped app</li>
+          </ul>
+          <p>
+            The scenarios are the weeks that tend to break a calendar: almost empty, class-heavy, one big assignment due in four days, a pile of small deadlines, overlapping anchors, a huge task with no time for it, soft plans only, imported events beside local work, a real overdue deadline, and a suggestion whose day already passed. That last one has to show up without being called overdue, and it does.
+          </p>
+          <p>
+            Gate 4 turned the prototype into something you can live in: Day, Week, and Month views as a secondary tool, repeating events, declared weekly hours, read-only calendar imports, quick add (<code>PS3 due Fri 11:59pm</code>), reminders, and a per-user Windows installer. Horizon stays home. Version 0.2 ships with 120 frontend tests and 187 Rust tests and doctests passing.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section class="case-section final-section" aria-labelledby="state-heading">
+      <div class="section-shell">
+        <p class="section-index font-mono">07 / CURRENT STATE</p>
+        <div class="case-copy">
+          <h2 id="state-heading">Current state</h2>
+          <p><strong>Temporal 0.2 is out, and the real trial starts with it.</strong></p>
+          <p>
+            Every number on this page comes from synthetic weeks. That's what the gates were for, but it also means the engine hasn't met real coursework yet. The last Gate 4 task is a real Windows install with real calendars. Notifications, the tray, and start at sign-in have only been checked on Linux so far, and the Quercus mapping is inferred, not observed from a live feed.
+          </p>
+          <p>
+            A few things are still open on purpose: the compression curve, the visual grammar, and how dense Horizon should get. AI stays out of the core until the deterministic rules show an actual gap, and if it ever comes in, it enters as labelled inference that can't overwrite a fact.
+          </p>
+          <p>
+            We haven't pulled the engine out into its own package yet, and we won't until real use shows it generalizes. When it does, <code>temporal-core</code> already sits behind the seam it would leave through.
+          </p>
+        </div>
+
+        <div class="final-readout font-mono" data-reveal>
+          <p>{temporal.status}</p>
+          <dl>
+            <div><dt>GATES PASSED</dt><dd>0 · 1 · 2</dd></div>
+            <div><dt>GATE 4</dt><dd>7 / 8</dd></div>
+            <div><dt>REAL WEEKS</dt><dd>00</dd></div>
+          </dl>
+        </div>
+      </div>
+    </section>
+  </article>
+</Base>
+
+<style>
+  .plain-ledger li {
+    display: block;
+    line-height: 1.6;
+  }
+
+  .plain-ledger strong {
+    margin-right: 0.35rem;
+  }
+
+  /* ---- Object classes ---- */
+  .class-grid {
+    display: grid;
+    margin-top: 3rem;
+    list-style: none;
+    border-top: 1px solid var(--research-rule);
+    border-left: 1px solid var(--research-rule);
+  }
+
+  .class-grid li {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 0.45rem;
+    padding: 1.1rem 1rem 1.25rem;
+    border-right: 1px solid var(--research-rule);
+    border-bottom: 1px solid var(--research-rule);
+  }
+
+  .class-grid strong {
+    font-size: 0.78rem;
+    letter-spacing: 0.1em;
+  }
+
+  .class-kind {
+    font-size: 0.6rem;
+    letter-spacing: 0.14em;
+    color: rgb(242 239 233 / 0.5);
+  }
+
+  .class-note {
+    margin-top: 0.4rem;
+    font-family: var(--font-sans);
+    font-size: 0.92rem;
+    line-height: 1.45;
+    color: rgb(242 239 233 / 0.74);
+  }
+
+  /* Facts get a solid magenta edge; inferred and derived ones a dashed one.
+     Shape carries the difference as well as colour, the same rule the app
+     holds itself to. */
+  .class-grid .is-fact {
+    box-shadow: inset 3px 0 0 var(--color-magenta);
+  }
+
+  .class-grid .is-fact .class-kind {
+    color: var(--color-magenta);
+  }
+
+  .class-grid .is-inferred {
+    background-image: repeating-linear-gradient(
+      180deg,
+      rgb(242 239 233 / 0.45) 0 6px,
+      transparent 6px 11px
+    );
+    background-size: 2px 100%;
+    background-repeat: no-repeat;
+  }
+
+  /* ---- Horizon compression ---- */
+  .horizon-track {
+    display: grid;
+    gap: 0.6rem;
+    padding: 1rem 0 2.4rem;
+  }
+
+  .horizon-track + .horizon-track {
+    border-top: 1px solid var(--research-rule);
+  }
+
+  .track-label {
+    font-size: 0.62rem;
+    letter-spacing: 0.14em;
+    color: rgb(242 239 233 / 0.5);
+  }
+
+  .track-rail {
+    position: relative;
+    height: 1.6rem;
+    margin-right: 1.2rem;
+    border-bottom: 1px solid rgb(242 239 233 / 0.4);
+  }
+
+  .track-first-day {
+    position: absolute;
+    inset: 0 auto 0 0;
+    background: rgb(242 239 233 / 0.1);
+  }
+
+  .is-curved .track-first-day {
+    background: linear-gradient(90deg, rgb(255 31 143 / 0.45), rgb(139 43 255 / 0.25));
+  }
+
+  .track-rail i {
+    position: absolute;
+    bottom: -0.35rem;
+    width: 1px;
+    height: calc(100% + 0.35rem);
+    background: rgb(242 239 233 / 0.55);
+  }
+
+  .track-rail b {
+    position: absolute;
+    top: calc(100% + 0.5rem);
+    left: 0;
+    transform: translateX(-50%);
+    font-family: var(--font-mono);
+    font-size: 0.55rem;
+    font-style: normal;
+    font-weight: 400;
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+    color: rgb(242 239 233 / 0.6);
+  }
+
+  .track-rail i:first-of-type b {
+    transform: none;
+    color: var(--color-magenta);
+  }
+
+  /* The hour labels crowd NOW on a phone-width rail, and so does 1D on the
+     linear one. Drop those labels there and keep the ticks, which still show
+     how much room the first day gets. */
+  @media (max-width: 39.99rem) {
+    .is-curved i:nth-of-type(2) b,
+    .is-curved i:nth-of-type(3) b,
+    .is-curved i:nth-of-type(4) b,
+    .track-rail:not(.is-curved) i:nth-of-type(2) b {
+      display: none;
+    }
+  }
+
+  /* ---- Today edit ---- */
+  .today-grid {
+    display: grid;
+    margin-top: 2.5rem;
+    list-style: none;
+    border-top: 1px solid var(--research-rule);
+    border-left: 1px solid var(--research-rule);
+  }
+
+  .today-grid li {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 1.1rem 1rem 1.3rem;
+    border-right: 1px solid var(--research-rule);
+    border-bottom: 1px solid var(--research-rule);
+  }
+
+  .today-limit {
+    font-family: var(--font-display);
+    font-size: 2.2rem;
+    font-weight: 800;
+    line-height: 1;
+    color: var(--color-magenta);
+  }
+
+  .today-grid strong {
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+  }
+
+  .today-note {
+    font-family: var(--font-sans);
+    font-size: 0.9rem;
+    line-height: 1.45;
+    color: rgb(242 239 233 / 0.7);
+  }
+
+  /* ---- Pressure ---- */
+  .pressure-scale {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1.4fr;
+    list-style: none;
+    border: 1px solid var(--research-rule);
+  }
+
+  .pressure-scale li {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 0.4rem;
+    padding: 1rem 0.8rem;
+    border-right: 1px solid var(--research-rule);
+  }
+
+  .pressure-scale li:last-child {
+    border-right: 0;
+  }
+
+  .pressure-scale strong {
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    overflow-wrap: anywhere;
+  }
+
+  .pressure-scale span {
+    font-size: 0.62rem;
+    color: rgb(242 239 233 / 0.55);
+  }
+
+  /* No red. Pressure deepens through the brand ramp instead, so "insufficient"
+     reads as information rather than an alarm. */
+  .pressure-scale .is-room {
+    background: rgb(242 239 233 / 0.03);
+  }
+
+  .pressure-scale .is-tight {
+    background: rgb(139 43 255 / 0.14);
+  }
+
+  .pressure-scale .is-insufficient {
+    background: rgb(255 31 143 / 0.18);
+  }
+
+  .pressure-figure .role-ledger {
+    margin-top: 1rem;
+  }
+
+  @media (min-width: 40rem) {
+    .class-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .today-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .track-label {
+      font-size: 0.66rem;
+    }
+
+    .track-rail b {
+      font-size: 0.6rem;
+    }
+  }
+
+  @media (min-width: 64rem) {
+    .class-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .today-grid {
+      max-width: 70rem;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .horizon-figure,
+    .pressure-figure {
+      max-width: 70rem;
+    }
+  }
+
+  /* ---- App screenshot ---- */
+  .shot-section .section-shell {
+    padding-bottom: 3.5rem;
+  }
+
+  .app-shot {
+    max-width: 70rem;
+  }
+
+  .app-shot-frame {
+    border: 1px solid var(--research-rule);
+    background: var(--color-void);
+  }
+
+  .app-shot figcaption {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0.4rem 1rem;
+    margin-top: 0.75rem;
+    font-size: 0.6rem;
+    letter-spacing: 0.14em;
+    color: rgb(242 239 233 / 0.45);
+  }
+
+  /* ---- Pipeline: the core cell is the one that matters ---- */
+  .pipeline-flow .is-core {
+    box-shadow: inset 0 0 0 2px var(--color-magenta);
+  }
+
+  .pipeline-flow .is-core strong {
+    color: var(--color-magenta);
+  }
+
+  /* ---- Core modules ---- */
+  .module-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-top: 3rem;
+    list-style: none;
+    border-top: 1px solid var(--research-rule);
+    border-left: 1px solid var(--research-rule);
+  }
+
+  .module-grid li {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.95rem 0.9rem 1.1rem;
+    border-right: 1px solid var(--research-rule);
+    border-bottom: 1px solid var(--research-rule);
+  }
+
+  .module-grid strong {
+    font-size: 0.74rem;
+    font-weight: 600;
+    color: var(--color-bone);
+    overflow-wrap: anywhere;
+  }
+
+  .module-grid strong::before {
+    content: 'core::';
+    color: rgb(242 239 233 / 0.38);
+  }
+
+  .module-grid span {
+    font-family: var(--font-sans);
+    font-size: 0.86rem;
+    line-height: 1.4;
+    color: rgb(242 239 233 / 0.68);
+  }
+
+  /* ---- Ownership ---- */
+  .ownership-table > div {
+    display: grid;
+    gap: 0.25rem;
+    padding: 0.85rem 0;
+    border-bottom: 1px solid var(--research-rule);
+  }
+
+  .ownership-table > div:last-child {
+    border-bottom: 0;
+  }
+
+  .ownership-table dt {
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    color: var(--color-bone);
+  }
+
+  .ownership-table dd:first-of-type {
+    font-size: 0.64rem;
+    letter-spacing: 0.08em;
+    color: var(--color-magenta);
+  }
+
+  .ownership-table dd:last-of-type {
+    font-size: 0.92rem;
+    line-height: 1.45;
+    color: rgb(242 239 233 / 0.7);
+  }
+
+  @media (min-width: 48rem) {
+    .ownership-table > div {
+      grid-template-columns: 11rem 15rem minmax(0, 1fr);
+      align-items: baseline;
+      gap: 1.5rem;
+    }
+  }
+
+  @media (min-width: 64rem) {
+    .module-grid {
+      max-width: 70rem;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
+
+    .ownership-figure {
+      max-width: 70rem;
+    }
+  }
+</style>

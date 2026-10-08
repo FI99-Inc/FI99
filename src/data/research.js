@@ -1,3 +1,6 @@
+// R&D entries. `strip` drives the cell row in both the readout and the
+// compact homepage row: PASS/DONE cells read as earned, FAIL as failed, and
+// anything else (OPEN, HOLD) as not decided yet.
 export const research = [
   {
     slug: 'verdant',
@@ -5,12 +8,16 @@ export const research = [
     name: 'VERDANT',
     version: '0.8',
     title: 'A falsifiable recommendation engine for sparse, subjective preferences.',
+    oneLiner: 'A recommender built to tell us when it was wrong. It did.',
     year: 2026,
     field: 'RECOMMENDER SYSTEMS',
+    state: 'PAUSED',
     status: 'PAUSED AFTER v0.8 CONFIRMATION',
     path: '/research/verdant',
     abstract:
-      'v0.8 completed its preregistered confirmation experiment. Cardinal scoring improved over the historical formulation across all eleven simulated worlds, but the full policy failed six of eleven confirmation screens. The held-out AUDIT was deliberately not run.',
+      'v0.8 ran its preregistered confirmation experiment. Cardinal scoring beat the old formulation in all eleven simulated worlds. The full policy still failed six of eleven screens, so we left the held-out AUDIT unopened, like we said we would.',
+    readoutTag: 'CONFIRMATION',
+    stripLabel: 'Confirmation screen results',
     readout: [
       { label: 'DEVELOPMENT_08', value: 'COMPLETE' },
       { label: 'SCREENS', value: '05 / 11' },
@@ -32,6 +39,44 @@ export const research = [
       { id: '11', name: 'INTEGRITY', state: 'PASS' },
     ],
   },
+  {
+    slug: 'temporal',
+    number: '02',
+    name: 'TEMPORAL',
+    version: '0.2',
+    title: 'A deterministic temporal engine that keeps facts, plans, and guesses apart.',
+    oneLiner: 'A time engine that knows a deadline from a guess.',
+    year: 2026,
+    field: 'TEMPORAL ENGINES',
+    state: 'IN TRIAL',
+    status: 'v0.2 RELEASE · FIRST REAL TRIAL',
+    path: '/research/temporal',
+    abstract:
+      'A Rust engine that evaluates a snapshot of obligations, plans, and declared time against an injected clock, and returns the same bytes every time. Deadlines stay facts, suggestions stay suggestions, and a skipped plan never turns into overdue guilt. v0.2 wraps it in a Windows app built around a compressed timeline called Horizon.',
+    readoutTag: 'BUILD GATES',
+    stripLabel: 'Build gate status',
+    readout: [
+      { label: 'GATES PASSED', value: '0 · 1 · 2' },
+      { label: 'GATE 4 TASKS', value: '07 / 08' },
+      { label: 'SCENARIOS', value: '81' },
+      { label: 'TESTS', value: '307' },
+      { label: 'STATE', value: 'IN TRIAL' },
+    ],
+    screens: [
+      { id: 'G0', name: 'CONSTITUTION', state: 'PASS' },
+      { id: 'G1', name: 'TEMPORAL CORE', state: 'PASS' },
+      { id: 'G2', name: 'TRACE-BACKED HORIZON', state: 'PASS' },
+      { id: 'G3', name: 'QUERCUS ADAPTER', state: 'HOLD' },
+      { id: 'G4', name: 'CALENDAR REPLACEMENT', state: 'OPEN' },
+    ],
+  },
 ];
 
 export const verdant = research[0];
+export const temporal = research[1];
+
+export function stripTone(state) {
+  if (state === 'PASS' || state === 'DONE') return 'is-pass';
+  if (state === 'FAIL') return 'is-fail';
+  return 'is-open';
+}

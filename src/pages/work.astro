@@ -7,12 +7,12 @@ import { projects } from '../data/projects.js';
 ---
 
 <Base
-  title="Work — FI99"
+  title="Work · FI99"
   description="Everything FI99 has shipped or is building."
 >
   <section class="py-12 sm:py-16" aria-labelledby="all-work-heading">
     <div class="px-4 sm:px-6">
-      <SectionRule label="ALL WORK" />
+      <SectionRule />
       <h2
         id="all-work-heading"
         data-split
@@ -20,9 +20,6 @@ import { projects } from '../data/projects.js';
       >
         Work
       </h2>
-      <p class="mt-6 max-w-2xl text-base text-bone/70 sm:text-lg">
-        Everything we have experimented with or are still arguing about.
-      </p>
     </div>
     <ul class="mt-12 list-none">
       {projects.map((project) => <ProjectRow project={project} shots />)}

@@ -1046,3 +1046,25 @@ html.motion .ml99-draw .ml99-path {
   border-top: 1px solid rgb(242 239 233 / 0.25);
   margin: 2.5em 0;
 }
+
+/* ---- Manifesto excerpt (home) ----
+   The site's four-stroke rule stood on its end, running the full height of
+   the quotation. Same mark as every section divider, so it reads as house
+   style; vertical, so it reads as "quoted" the way a blockquote bar does. */
+.manifesto-quote {
+  display: grid;
+  grid-template-columns: 0.75rem minmax(0, 1fr);
+  column-gap: clamp(1rem, 3vw, 2.5rem);
+}
+
+.manifesto-quote-rule {
+  grid-row: 1 / span 2;
+  width: 0.75rem;
+  height: 100%;
+}
+
+.manifesto-quote > blockquote,
+.manifesto-quote > figcaption {
+  grid-column: 2;
+  min-width: 0;
+}

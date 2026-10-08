@@ -7,7 +7,7 @@ const Heading = headingLevel;
 
 <article class:list={['research-feature', large && 'research-feature--large']} data-reveal>
   <div class="feature-copy">
-    <p class="feature-number font-mono">RESEARCH — {entry.number}</p>
+    <p class="feature-number font-mono">R&amp;D {entry.number}</p>
     <Heading class="feature-title font-display">
       <a href={entry.path}>{entry.name}</a>
     </Heading>
@@ -31,7 +31,6 @@ const Heading = headingLevel;
     gap: 2.5rem;
     padding: 2rem 1rem;
     border-top: 1px solid rgb(242 239 233 / 0.2);
-    border-bottom: 1px solid rgb(242 239 233 / 0.2);
   }
 
   .feature-copy {
@@ -44,12 +43,14 @@ const Heading = headingLevel;
     color: var(--color-magenta);
   }
 
+  /* Set at the same size as a /work row name. Anything bigger and the
+     project out-shouts the section heading it sits under. */
   .feature-title {
-    margin-top: 1rem;
-    font-size: clamp(2.25rem, 5.2vw, 4.5rem);
-    font-weight: 900;
-    line-height: 0.9;
-    letter-spacing: -0.04em;
+    margin-top: 0.75rem;
+    font-size: 1.5rem;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.025em;
   }
 
   .feature-title a {
@@ -83,10 +84,6 @@ const Heading = headingLevel;
     font-size: 0.95rem;
     line-height: 1.55;
     color: rgb(242 239 233 / 0.74);
-  }
-
-  .research-feature--large .feature-title {
-    font-size: clamp(2.4rem, 8vw, 6.75rem);
   }
 
   .research-feature--large .feature-abstract {
@@ -124,6 +121,10 @@ const Heading = headingLevel;
     .research-feature {
       padding: 3rem 1.5rem;
     }
+
+    .feature-title {
+      font-size: 2.25rem;
+    }
   }
 
   @media (min-width: 64rem) {
@@ -135,7 +136,7 @@ const Heading = headingLevel;
     }
 
     .research-feature--large {
-      padding-block: 5.5rem;
+      padding-block: 4rem;
     }
   }
 </style>

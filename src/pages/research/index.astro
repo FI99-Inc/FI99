@@ -6,25 +6,24 @@ import { research } from '../../data/research.js';
 ---
 
 <Base
-  title="Research — FI99"
-  description="Systems, methods, and questions FI99 investigates, including the VERDANT recommendation experiment."
+  title="R&D · FI99"
+  description="FI99 research and development: VERDANT, a recommender built to prove itself wrong, and Temporal, a calendar that keeps facts apart from guesses."
 >
   <section class="py-12 sm:py-16" aria-labelledby="research-heading">
     <div class="px-4 sm:px-6">
-      <SectionRule label="FI99 RESEARCH" />
+      <SectionRule />
+      <!-- Sized a notch under /work's heading: DEVELOPMENT is long enough
+           that 10vw pushes it past a 320px screen. -->
       <h1
         id="research-heading"
         data-split
-        class="mt-6 font-display text-[clamp(2rem,10vw,8rem)] font-black uppercase leading-none tracking-tight"
+        class="mt-6 font-display text-[clamp(1.75rem,7.6vw,8rem)] font-black uppercase leading-none tracking-tight"
       >
-        Research
+        Research &amp; Development
       </h1>
-      <p class="mt-6 max-w-3xl text-[clamp(1.1rem,2.2vw,1.5rem)] leading-relaxed text-bone/72">
-        Some of our work is easier to understand as a question than a product. We keep the experiment, including the parts that tell us we were wrong.
-      </p>
     </div>
 
-    <div class="mt-12">
+    <div class="mt-12 border-b border-bone/20">
       {research.map((entry) => <ResearchFeature entry={entry} large headingLevel="h2" />)}
     </div>
   </section>

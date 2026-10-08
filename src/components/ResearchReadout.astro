@@ -1,4 +1,6 @@
 ---
+import { stripTone } from '../data/research.js';
+
 const {
   entry,
   compact = false,
@@ -15,7 +17,7 @@ const Heading = headingLevel;
 >
   <header class="readout-header">
     <Heading>{entry.name} / {entry.version}</Heading>
-    <span aria-hidden="true">CONFIRMATION</span>
+    <span aria-hidden="true">{entry.readoutTag}</span>
   </header>
 
   <dl class="readout-values">
@@ -29,12 +31,16 @@ const Heading = headingLevel;
     }
   </dl>
 
-  <ol class="screen-strip" aria-label="Confirmation screen results">
+  <ol
+    class="screen-strip"
+    aria-label={entry.stripLabel}
+    style={`--strip-count: ${entry.screens.length}`}
+  >
     {
       entry.screens.map((screen) => (
         <li
-          class:list={[screen.state === 'PASS' ? 'is-pass' : 'is-fail']}
-          aria-label={`Screen ${screen.id}, ${screen.name}: ${screen.state}`}
+          class:list={[stripTone(screen.state)]}
+          aria-label={`${screen.id}, ${screen.name}: ${screen.state}`}
         >
           <span aria-hidden="true">{screen.id}</span>
           <strong aria-hidden="true">{screen.state[0]}</strong>
@@ -102,7 +108,7 @@ const Heading = headingLevel;
 
   .screen-strip {
     display: grid;
-    grid-template-columns: repeat(11, minmax(2.2rem, 1fr));
+    grid-template-columns: repeat(var(--strip-count, 11), minmax(2.2rem, 1fr));
     overflow-x: auto;
     border-top: 1px solid rgb(242 239 233 / 0.24);
     list-style: none;
@@ -148,6 +154,16 @@ const Heading = headingLevel;
 
   .screen-strip .is-fail strong {
     color: rgb(242 239 233 / 0.68);
+  }
+
+  /* Not decided yet: no hatching (nothing failed) and no magenta (nothing
+     earned). A dotted rule reads as a gap still waiting to be filled. */
+  .screen-strip .is-open strong {
+    color: rgb(242 239 233 / 0.45);
+  }
+
+  .screen-strip .is-open {
+    box-shadow: inset 0 -2px 0 rgb(242 239 233 / 0.18);
   }
 
   .research-readout--compact .readout-header {

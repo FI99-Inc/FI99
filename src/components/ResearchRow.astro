@@ -1,0 +1,110 @@
+---
+import { stripTone } from '../data/research.js';
+
+// The homepage cut of an R&D entry. Same grid and type scale as a compact
+// ProjectRow, so the section reads as a sibling of The Lab instead of a
+// poster dropped between two lists. The slot a project uses for its
+// thumbnail carries the entry's gate/screen strip instead: R&D has results
+// to show, not screenshots.
+const { entry } = Astro.props;
+---
+
+<li class="border-t border-bone/20" data-reveal>
+  <a
+    href={entry.path}
+    class="row-link group grid grid-cols-1 items-baseline gap-x-4 gap-y-2 px-4 py-6 transition-colors hover:bg-bone hover:text-void active:bg-bone active:text-void sm:grid-cols-[minmax(0,3fr)_11rem_minmax(0,4fr)_minmax(0,3fr)] sm:px-6 sm:py-8"
+  >
+    <h3 class="font-display text-2xl font-extrabold uppercase leading-none tracking-tight sm:text-4xl">
+      {entry.name}
+    </h3>
+    <ol
+      class="row-strip hidden self-center font-mono sm:col-start-2 sm:grid"
+      style={`--strip-count: ${entry.screens.length}`}
+      aria-label={entry.stripLabel}
+    >
+      {
+        entry.screens.map((screen) => (
+          <li class={stripTone(screen.state)} aria-label={`${screen.id}, ${screen.name}: ${screen.state}`}>
+            <span aria-hidden="true">{screen.state[0]}</span>
+          </li>
+        ))
+      }
+    </ol>
+    <p class="text-sm text-bone/70 group-hover:text-void/80 group-active:text-void/80 sm:col-start-3 sm:text-base">
+      {entry.oneLiner}
+    </p>
+    <p class="flex flex-wrap items-baseline gap-x-2 font-mono text-[11px] tracking-[0.15em] sm:col-start-4 sm:justify-end sm:text-right">
+      <span class="whitespace-nowrap text-magenta group-hover:text-void group-active:text-void">
+        {entry.state} v{entry.version}
+      </span>
+      <span class="whitespace-nowrap text-bone/60 group-hover:text-void/70 group-active:text-void/70">
+        {entry.year} · {entry.field}
+      </span>
+      <span class="whitespace-nowrap text-bone/60 group-hover:text-void group-active:text-void">
+        <span class="text-bone/40 group-hover:text-void/60 group-active:text-void/60">·</span> READ →
+      </span>
+    </p>
+  </a>
+</li>
+
+<style>
+  .row-strip {
+    grid-template-columns: repeat(var(--strip-count), minmax(0, 1fr));
+    border: 1px solid rgb(242 239 233 / 0.2);
+    list-style: none;
+  }
+
+  .row-strip li {
+    display: grid;
+    min-height: 2.25rem;
+    place-content: center;
+    border-right: 1px solid rgb(242 239 233 / 0.14);
+    font-size: 0.6rem;
+    color: rgb(242 239 233 / 0.6);
+  }
+
+  .row-strip li:last-child {
+    border-right: 0;
+  }
+
+  .row-strip .is-pass {
+    color: var(--color-magenta);
+  }
+
+  .row-strip .is-fail {
+    background-image: repeating-linear-gradient(
+      135deg,
+      transparent 0,
+      transparent 4px,
+      rgb(242 239 233 / 0.08) 4px,
+      rgb(242 239 233 / 0.08) 5px
+    );
+  }
+
+  .row-strip .is-open {
+    color: rgb(242 239 233 / 0.4);
+  }
+
+  /* The row inverts to bone on hover; the strip follows it to void. */
+  .group:hover .row-strip,
+  .group:active .row-strip {
+    border-color: rgb(6 6 6 / 0.25);
+  }
+
+  .group:hover .row-strip li,
+  .group:active .row-strip li {
+    border-color: rgb(6 6 6 / 0.15);
+    color: rgb(6 6 6 / 0.7);
+  }
+
+  .group:hover .row-strip .is-fail,
+  .group:active .row-strip .is-fail {
+    background-image: repeating-linear-gradient(
+      135deg,
+      transparent 0,
+      transparent 4px,
+      rgb(6 6 6 / 0.12) 4px,
+      rgb(6 6 6 / 0.12) 5px
+    );
+  }
+</style>

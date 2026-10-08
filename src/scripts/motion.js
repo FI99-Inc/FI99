@@ -312,26 +312,32 @@ function starTrails() {
   };
 }
 
-// Clicking the mark drops a ripple across it. The rings themselves live in
-// global.css (see .grad-scroll[data-ripple]) — everything here does is aim
-// one, run it outward, and hand the slot back.
+// A click anywhere on the page drops a ripple, centred where you clicked,
+// that crosses the mark. The rings themselves live in global.css (see
+// .grad-scroll[data-ripple]); everything here does is aim one, run it
+// outward, and hand the slot back.
 const RIPPLE_SLOTS = 3;
+// How fast the wavefront crosses empty page before it reaches the glyphs.
+// The ring is clipped to the letterforms, so that stretch is never painted;
+// it only decides how long the wave takes to arrive.
+const RIPPLE_TRAVEL_PX_PER_S = 2200;
 
 function clickRipples() {
   const surfaces = gsap.utils.toArray('[data-ripple]');
   if (!surfaces.length) return null;
 
-  const stops = [];
-
-  surfaces.forEach((el) => {
+  const instances = surfaces.map((el) => {
     // One timeline per slot, so a fourth click within a wave's lifetime
     // recycles the oldest ring instead of leaving two tweens fighting over
     // the same variables.
     const running = new Array(RIPPLE_SLOTS).fill(null);
     let next = 0;
 
-    const onDown = (event) => {
+    const drop = (event) => {
       const rect = el.getBoundingClientRect();
+      // Scrolled out of view: nobody would see the wave, so don't pay for it.
+      if (rect.bottom < 0 || rect.top > window.innerHeight) return;
+
       const x = event.clientX - rect.left;
       const y = event.clientY - rect.top;
 
@@ -343,18 +349,28 @@ function clickRipples() {
         Math.hypot(x, rect.height - y),
         Math.hypot(rect.width - x, rect.height - y)
       );
+      // Distance from the click to the mark's box (0 when the click lands on
+      // it). The ring starts just short of that edge, after the delay it
+      // would have taken to cross the gap, so a far click arrives later but
+      // still crosses the glyphs at full strength.
+      const gap = Math.hypot(
+        Math.max(0 - x, 0, x - rect.width),
+        Math.max(0 - y, 0, y - rect.height)
+      );
+      const start = Math.max(0, gap - 40);
 
       const i = next;
       next = (next + 1) % RIPPLE_SLOTS;
       running[i]?.kill();
 
-      gsap.set(el, { [`--r${i}x`]: x, [`--r${i}y`]: y, [`--r${i}r`]: 0, [`--r${i}a`]: 1 });
+      gsap.set(el, { [`--r${i}x`]: x, [`--r${i}y`]: y, [`--r${i}r`]: start, [`--r${i}a`]: 1 });
 
       running[i] = gsap
         .timeline({
+          delay: start / RIPPLE_TRAVEL_PX_PER_S,
           onStart: () => el.style.setProperty(`--ripple-${i}`, `var(--ripple-ring-${i})`),
           onComplete: () => {
-            // Drop the layer rather than leaving it at alpha 0 — an idle
+            // Drop the layer rather than leaving it at alpha 0. An idle
             // ripple would still be repainted on every scrolled frame.
             el.style.removeProperty(`--ripple-${i}`);
             running[i] = null;
@@ -368,17 +384,25 @@ function clickRipples() {
         .to(el, { [`--r${i}a`]: 0, duration: 1.25, ease: 'power2.in' }, 0);
     };
 
-    el.addEventListener('pointerdown', onDown);
-    stops.push(() => {
-      el.removeEventListener('pointerdown', onDown);
+    const stop = () =>
       running.forEach((tl, i) => {
         tl?.kill();
         el.style.removeProperty(`--ripple-${i}`);
       });
-    });
+
+    return { drop, stop };
   });
 
-  return () => stops.forEach((stop) => stop());
+  // On the document rather than the mark: the whole page is the pond. Passive
+  // and side-effect free, so it never gets in the way of the link or button
+  // that was actually clicked.
+  const onDown = (event) => instances.forEach(({ drop }) => drop(event));
+  document.addEventListener('pointerdown', onDown, { passive: true });
+
+  return () => {
+    document.removeEventListener('pointerdown', onDown);
+    instances.forEach(({ stop }) => stop());
+  };
 }
 
 // The hero's "SCROLL ↓" cue was decorative text; it's a real button now,
